@@ -22,16 +22,31 @@ void setup() {
   cb.setOAuthConsumerSecret(credentials[1]);
   cb.setOAuthAccessToken(credentials[2]);
   cb.setOAuthAccessTokenSecret(credentials[3]);
+
+  int rootUserId = 70665746;
   
-  //Make the twitter object
-  Twitter twitter = new TwitterFactory(cb.build()).getInstance();
-  
-  //Prepare the query
-  Query query = new Query("#20FactsAboutMe");
-  query.setRpp(100); //Set results per page
-  
-  //Try making the query
   try {
+    //Make the twitter object
+    Twitter twitter = new TwitterFactory(cb.build()).getInstance();
+    
+    long cursor = -1; //If we get a paginated API response, keep track of our position
+
+    IDs ids;
+    println("Listing followers's ids.");
+    do {
+        ids = twitter.getFollowersIDs(rootUserId, cursor);
+        for (long id : ids.getIDs()) {
+            System.out.format("%d\n", id);
+        }
+    } while ((cursor = ids.getNextCursor()) != 0);
+
+
+    /*
+    //Prepare the query
+    Query query = new Query("#20FactsAboutMe");
+    query.setRpp(100); //Set results per page
+  
+    //Try making the query
     QueryResult result = twitter.search(query);
     printDelimiter(1);
     println("GOT RESPONSE:\n\n"+result);
@@ -52,11 +67,14 @@ void setup() {
        words.add(input[j]);
       }
     }
+    */
 
   }
   catch (TwitterException te) {
     println("Couldn't connect: " + te);
   }
+
+  noLoop();
 }
 
 void draw() {
@@ -65,13 +83,15 @@ void draw() {
   rect(0,0,width,height);
  
   //Draw a word from the list of words that we've built
-  int i = (frameCount % words.size());
-  String word = words.get(i);
- 
-  //Put it somewhere random on the stage, with a random size and colour
-  fill(255,random(50,150));
-  textSize(random(10,30));
-  text(word, random(width), random(height));
+  if (words.size() > 0) {
+    int i = (frameCount % words.size());
+    String word = words.get(i);
+   
+    //Put it somewhere random on the stage, with a random size and colour
+    fill(255,random(50,150));
+    textSize(random(10,30));
+    text(word, random(width), random(height));
+  }
 }
 
 void printDelimiter() {
