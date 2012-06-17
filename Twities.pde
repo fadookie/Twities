@@ -30,6 +30,8 @@ void setup() {
     Twitter twitter = new TwitterFactory(cb.build()).getInstance();
     
 
+    //Get follower IDs
+    /*
     IDs followerIds;
     {
       long cursor = -1; //If we get a paginated API response, keep track of our position
@@ -37,13 +39,16 @@ void setup() {
       do {
           followerIds = twitter.getFollowersIDs(rootUserId, cursor);
           for (long id : followerIds.getIDs()) {
-              System.out.format("%d\n", id);
+              //System.out.format("%d\n", id);
           }
           println("Got Follower IDs: " + followerIds.getIDs().length);
       } while ((cursor = followerIds.getNextCursor()) != 0);
     }
+    */
 
-    printDelimiter();
+    printDelimiter(1);
+
+    //Get following IDs
     IDs followingIds;
     {
       long cursor = -1; //If we get a paginated API response, keep track of our position
@@ -51,12 +56,34 @@ void setup() {
       do {
           followingIds = twitter.getFriendsIDs(rootUserId, cursor);
           for (long id : followingIds.getIDs()) {
-              System.out.format("%d\n", id);
+              //System.out.format("%d\n", id);
           }
           println("Got Friend IDs: " + followingIds.getIDs().length);
       } while ((cursor = followingIds.getNextCursor()) != 0);
     }
 
+    //Get user info for following
+    long[] followingMaster = followingIds.getIDs();
+    println("followingMaster = " + java.util.Arrays.asList(followingMaster));
+    printDelimiter(1);
+
+    long[][] followingChunks = divideArray(followingMaster, 100);
+    println("followingChunks = " + java.util.Arrays.asList(followingChunks));
+    printDelimiter(1);
+
+    for (long[] followingUsers : followingChunks) {
+      //Lookup users for following IDs
+      ResponseList<User> users = twitter.lookupUsers(followingUsers);
+      for (User user : users) {
+          if (user.getStatus() != null) {
+              println("@" + user.getScreenName() + " - " + user.getStatus().getText());
+          } else {
+              // the user is protected
+              println("@" + user.getScreenName());
+          }
+      }
+      System.out.println("Successfully looked up users.");
+    }
 
 
     /*
@@ -110,6 +137,21 @@ void draw() {
     textSize(random(10,30));
     text(word, random(width), random(height));
   }
+}
+
+long[][] divideArray(long[] source, int chunksize) {
+
+
+        long[][] ret = new long[(int)Math.ceil(source.length / (double)chunksize)][chunksize];
+
+        int start = 0;
+
+        for(int i = 0; i < ret.length; i++) {
+            ret[i] = java.util.Arrays.copyOfRange(source,start, start + chunksize);
+            start += chunksize ;
+        }
+
+        return ret;
 }
 
 void printDelimiter() {
