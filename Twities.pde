@@ -149,12 +149,18 @@ void setup() {
 }
 
 /**
- * Compute the path to the cache file from a base file name, taking into account the root user.
+ * Compute the path to the shared cache file from a base file name
  * Avatars are cached seperately and shared between users.
+ * @param String filename Name of cache file
  */
 String cachePrefixForFile(String filename) {
   return cachePrefixForFile(filename, "shared");
 }
+/**
+ * Compute the path to a group cache file
+ * @param String filename Name of cache file
+ * @param String groupName Name of group, this is usually the User ID string. Group name "shared" is reserved for shared caches.
+ */
 String cachePrefixForFile(String filename, String groupName) {
   return cachePrefix + filename + "/" + groupName + ".bin";
 }
@@ -188,6 +194,9 @@ Object loadFromCacheOrRequest(TwitterCachedCall call) {
   return responseObject;
 }
 
+/**
+ * Load an object from the cache
+ */
 Serializable loadFromCache(String cacheFileName) {
   Serializable cachedObject = null;
   InputStream fis = createInput(cacheFileName);
@@ -206,6 +215,9 @@ Serializable loadFromCache(String cacheFileName) {
   return cachedObject;
 }
 
+/**
+ * Save an object to the cache
+ */
 void saveToCache(String cacheFileName, Serializable object) {
   OutputStream fos = createOutput(cacheFileName);
   if (fos != null) {
