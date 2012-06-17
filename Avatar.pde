@@ -1,14 +1,11 @@
 class Avatar {
   String url;
-  float scale;
   User user;
   PImage image;
-  PVector position = new PVector();
 
   Avatar(User user) throws IOException {
     this.user = user;
     this.url = user.getProfileImageURL().toString();
-    scale = user.getFollowersCount();
 
     String cacheLocation = getCacheLocation();
     image = loadImage(cacheLocation);
@@ -31,14 +28,5 @@ class Avatar {
     //logLine("url: " +url+ " components: " + components + " length : " + components.length);
     String extension = (components.length > 0) ? components[components.length - 1] : "";
     return cachePrefix + "avatars/" + user.getId() + "." + extension;
-  }
-
-  void draw() {
-    if (image != null) {
-      pushMatrix();
-      translate(position.x, position.y);
-      image(image, 0, 0, scale, scale);
-      popMatrix();
-    }
   }
 }

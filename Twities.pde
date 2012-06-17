@@ -3,6 +3,7 @@ int rootUserId = -1;
 IDs friendIds; 
 ResponseList<User> users;
 HashMap<User, Avatar> avatars = new HashMap();
+HashMap<User, Building> buildings = new HashMap();
 String messageString = null;
 String cachePrefix = "cache/";
 
@@ -97,13 +98,19 @@ void setup() {
     for (User user : users) {
       try {
         Avatar userAvatar = new Avatar(user);
-        //for now, randomize placement
-        userAvatar.position.x = random(width);
-        userAvatar.position.y = random(height);
         avatars.put(user, userAvatar);
       } catch (IOException e) {
         logLine("IOException when trying to load Avatar at " + user.getProfileImageURL().toString());
       }
+    }
+
+    //Create buildings
+    for (Avatar avatar : avatars.values()) {
+      Building building = new Building(avatar);
+      //for now, randomize placement
+      building.position.x = random(width);
+      building.position.y = random(height);
+      buildings.put(avatar.user, building);
     }
 
     messageString = null;
@@ -170,10 +177,12 @@ Object loadFromCacheOrRequest(TwitterCachedCall call) {
 //---------- Drawing Functions ---------------//
 
 void draw() {
-  for (Avatar avatar : avatars.values()) {
-    avatar.position.x += 0.01 * avatar.scale;
-    avatar.position.y += 0.01 * avatar.scale;
-    avatar.draw();
+  background(0);
+
+  for (Building building : buildings.values()) {
+    building.position.x += 0.01 * building.scale;
+    building.position.y += 0.01 * building.scale;
+    building.draw();
   }
 
   if (messageString != null) {
