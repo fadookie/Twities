@@ -18,10 +18,7 @@ class TwitterCachedFriendsIDCall implements TwitterCachedCall {
   }
 
   Serializable executeCall() {
-    return executeCall(-1);
-  }
-
-  Serializable executeCall(long cursor) {
+    long cursor = -1; //If we get a paginated API response, keep track of our position
     IDs responseObject = null;
     try {
       do {

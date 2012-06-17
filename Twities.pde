@@ -49,43 +49,29 @@ void setup() {
 
     //Get following IDs
     TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(twitter, rootUserId, "followingIds.bin");
-    IDs responseObject = (IDs)loadFromCacheOrRequest(friendsIdCall);
+    IDs friendIds = (IDs)loadFromCacheOrRequest(friendsIdCall);
 
-    if (responseObject != null) {
-      println("Got Friend IDs: " + responseObject.getIDs().length);
+    if (friendIds != null) {
+      println("Got Friend IDs: " + friendIds.getIDs().length);
     } else {
       println("Failed to get Friend IDs. :(");
+      noLoop();
+      exit();
     }
 
     //Get user info for following
-    /*
-    long[] followingMaster = responseObject.getIDs();
-    println("followingMaster = " + java.util.Arrays.asList(followingMaster));
+    long[] followingMaster = friendIds.getIDs();
     printDelimiter(1);
 
-    //long[][] followingChunks = divideArray(followingMaster, 100);
-
-    //Debugging - limit this to one API request.
-    long[][] followingChunks = new long[1][];
-    followingChunks[0] = Arrays.copyOfRange(followingMaster, 0, 100);
-
-    println("followingChunks = " + java.util.Arrays.asList(followingChunks));
-    printDelimiter(1);
-
-    for (long[] followingUsers : followingChunks) {
-      //Lookup users for following IDs
-      ResponseList<User> users = twitter.lookupUsers(followingUsers);
-      for (User user : users) {
-          if (user.getStatus() != null) {
-              println("@" + user.getScreenName() + " - " + user.getStatus().getText());
-          } else {
-              // the user is protected
-              println("@" + user.getScreenName());
-          }
-      }
-      System.out.println("Successfully looked up users.");
+    TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(twitter, followingMaster /*limited to 100 by test code in object*/, "lookupUsers.bin");
+    ResponseList<User> users = (ResponseList<User>)loadFromCacheOrRequest(lookupCall);
+    if (users != null) {
+      println("Got users!");
+    } else {
+      println("No users were found.");
+      noLoop();
+      exit();
     }
-    */
 
 
     /*
@@ -121,7 +107,7 @@ void setup() {
 
 Serializable loadFromCacheOrRequest(TwitterCachedCall call) {
   Serializable responseObject = null;
-  String cacheFileName = call.getCacheFileName();
+  String cacheFileName = "data/" + call.getCacheFileName();
   InputStream fis = createInput(cacheFileName);
   if (fis != null) {
     try {
@@ -136,7 +122,6 @@ Serializable loadFromCacheOrRequest(TwitterCachedCall call) {
   }
 
   if (responseObject == null) {
-    long cursor = -1; //If we get a paginated API response, keep track of our position
     System.out.println("Listing following ids.");
     responseObject = call.executeCall();
 
