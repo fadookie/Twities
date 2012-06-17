@@ -65,6 +65,8 @@
       } catch (Exception e) {
         println("Exception deserializing cache at " + cacheFileName);
       }
+    } else {
+      println("Cache miss for file " + cacheFileName);
     }
     
     return cachedObject;
@@ -81,9 +83,9 @@
         oos.writeObject(object);
         oos.close();
         fos.close();
-        println("Wrote " + object + " to cache at " + cacheFileName);
+        println("Wrote object to cache at " + cacheFileName);
       } catch (IOException ioe) {
-        println("IOException writing " + object + " to cache file at " + cacheFileName
+        println("IOException writing object to cache file at " + cacheFileName
             + ". Exception: " + ioe.getMessage());
       }
     }

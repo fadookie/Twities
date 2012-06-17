@@ -2,7 +2,7 @@
 CacheManager cacheManager = new CacheManager();
 long rootUserId = -1;
 IDs friendIds; 
-HashMap<Long, User> users = new HashMap();
+HashMap<Long, User> users;
 HashMap<User, Avatar> avatars = new HashMap();
 TreeSet<Building> buildings = new TreeSet();
 String messageString = null;
@@ -68,6 +68,13 @@ void setup() {
     */
 
     printDelimiter(1);
+
+
+    //Load users from cache if available
+    users = (HashMap<Long, User>)cacheManager.loadFromCache(cacheManager.cachePrefixForFile("users"));
+    if (users == null) {
+      users = new HashMap<Long, User>();
+    }
 
     //Get following IDs
     TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(
@@ -142,8 +149,12 @@ void setup() {
       }
 
       printDelimiter();
-      println("prepared buildings:\n" + buildings);
+      println("prepared buildings.");
     }
+
+    //Write new users map to cache
+    printDelimiter();
+    cacheManager.saveToCache(cacheManager.cachePrefixForFile("users"), users);
 
     messageString = null;
 }
