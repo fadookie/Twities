@@ -7,9 +7,8 @@ HashMap<User, Avatar> avatars = new HashMap();
 //---------- Loading Functions ---------------//
 
 void setup() {
-  size(550,550);
+  size(800,800, OPENGL);
   background(0);
-  smooth();
  
   //Credentials
   ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -91,7 +90,6 @@ void setup() {
         println("IOException when trying to load Avatar at " + user.getProfileImageURL().toString());
       }
     }
-    noLoop();
 }
 
 /**
@@ -147,11 +145,9 @@ Object loadFromCacheOrRequest(TwitterCachedCall call) {
 //---------- Drawing Functions ---------------//
 
 void draw() {
-  //Draw a faint black rectangle over what is currently on the stage so it fades over time.
-  fill(0,1);
-  rect(0,0,width,height);
-
   for (Avatar avatar : avatars.values()) {
+    avatar.position.x += 0.01 * avatar.scale;
+    avatar.position.y += 0.01 * avatar.scale;
     avatar.draw();
   }
 }
