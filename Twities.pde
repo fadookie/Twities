@@ -2,6 +2,7 @@
 CacheManager cacheManager = new CacheManager();
 long rootUserId = -1;
 IDs friendIds; 
+ArrayList<User> following = new ArrayList();
 HashMap<Long, User> users;
 HashMap<User, Avatar> avatars = new HashMap();
 TreeSet<Building> buildings = new TreeSet();
@@ -127,8 +128,18 @@ void setup() {
     cacheManager.saveToCache(cacheManager.cachePrefixForFile("users"), users);
   }
 
+  //Populate following list
+  for (long id : friendIds.getIDs()) {
+    User user = users.get(id);
+    if (user != null) {
+      following.add(user);
+    } else {
+      println("User " + id + " was null.");
+    }
+  }
+
   //Load avatars
-  for (User user : users.values()) {
+  for (User user : following) {
     try {
       Avatar userAvatar = new Avatar(user);
       avatars.put(user, userAvatar);
