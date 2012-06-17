@@ -25,7 +25,6 @@ void setup() {
 
   int rootUserId = 156560059;//70665746;
   
-  try {
     //Make the twitter object
     Twitter twitter = new TwitterFactory(cb.build()).getInstance();
     
@@ -49,55 +48,18 @@ void setup() {
     printDelimiter(1);
 
     //Get following IDs
-    IDs followingIds = null;
-    String followingIdsFileName = "data/followingIds.bin";
-    InputStream fis = createInput(followingIdsFileName);
-    if (fis != null) {
-      try {
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        followingIds = (IDs)ois.readObject();
-        ois.close();
-        println("Successful cache load from " + followingIdsFileName);
-      } catch (Exception e) {
-        println("Exception deserializing cache at " + followingIdsFileName);
-      }
-      fis.close();
-    }
+    TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(twitter, rootUserId, "followingIds.bin");
+    IDs responseObject = (IDs)loadFromCacheOrRequest(friendsIdCall);
 
-    if (followingIds == null) {
-      long cursor = -1; //If we get a paginated API response, keep track of our position
-      System.out.println("Listing following ids.");
-      do {
-          followingIds = twitter.getFriendsIDs(rootUserId, cursor);
-          for (long id : followingIds.getIDs()) {
-              //System.out.format("%d\n", id);
-          }
-      } while ((cursor = followingIds.getNextCursor()) != 0);
-
-      OutputStream fos = createOutput(followingIdsFileName);
-      if (fos != null) {
-        try {
-          ObjectOutputStream oos = new ObjectOutputStream(fos);
-          oos.writeObject(followingIds);
-          oos.close();
-          fos.close();
-          println("Wrote follower IDs to cache at " + followingIdsFileName);
-        } catch (IOException ioe) {
-          println("IOException writing to cache file at " + followingIdsFileName
-              + ". Exception: " + ioe.getMessage());
-        }
-      }
-    }
-
-    if (followingIds != null) {
-      println("Got Friend IDs: " + followingIds.getIDs().length);
+    if (responseObject != null) {
+      println("Got Friend IDs: " + responseObject.getIDs().length);
     } else {
       println("Failed to get Friend IDs. :(");
     }
 
     //Get user info for following
     /*
-    long[] followingMaster = followingIds.getIDs();
+    long[] followingMaster = responseObject.getIDs();
     println("followingMaster = " + java.util.Arrays.asList(followingMaster));
     printDelimiter(1);
 
@@ -154,13 +116,49 @@ void setup() {
     }
     */
 
-  } catch (TwitterException te) {
-    println("Couldn't connect: " + te);
-  } catch (Exception e) {
-    println("Unknown exception:" + e);
+  noLoop();
+}
+
+Serializable loadFromCacheOrRequest(TwitterCachedCall call) {
+  Serializable responseObject = null;
+  String cacheFileName = call.getCacheFileName();
+  InputStream fis = createInput(cacheFileName);
+  if (fis != null) {
+    try {
+      ObjectInputStream ois = new ObjectInputStream(fis);
+      responseObject = (Serializable)ois.readObject();
+      ois.close();
+      fis.close();
+      println("Successful cache load from " + cacheFileName);
+    } catch (Exception e) {
+      println("Exception deserializing cache at " + cacheFileName);
+    }
   }
 
-  noLoop();
+  if (responseObject == null) {
+    long cursor = -1; //If we get a paginated API response, keep track of our position
+    System.out.println("Listing following ids.");
+    responseObject = call.executeCall();
+
+    if (responseObject != null) {
+      OutputStream fos = createOutput(cacheFileName);
+      if (fos != null) {
+        try {
+          ObjectOutputStream oos = new ObjectOutputStream(fos);
+          oos.writeObject(responseObject);
+          oos.close();
+          fos.close();
+          println("Wrote " + call + " to cache at " + cacheFileName);
+        } catch (IOException ioe) {
+          println("IOException writing " + call + " to cache file at " + cacheFileName
+              + ". Exception: " + ioe.getMessage());
+        }
+      }
+    } else {
+      println("API call " + call + " failed and no cache is available.");
+    }
+  }
+  return responseObject;
 }
 
 void draw() {
