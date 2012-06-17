@@ -2,6 +2,7 @@
 ArrayList<String> words = new ArrayList();
 IDs friendIds; 
 ResponseList<User> users;
+HashMap<User, Avatar> avatars = new HashMap();
 
 //---------- Loading Functions ---------------//
 
@@ -78,6 +79,15 @@ void setup() {
       exit();
     }
 
+    //Load avatars
+    for (User user : users) {
+      try {
+        Avatar userAvatar = new Avatar(user);
+        avatars.put(user, userAvatar);
+      } catch (IOException e) {
+        println("IOException when trying to load Avatar at " + user.getProfileImageURL().toString());
+      }
+    }
     noLoop();
 }
 
@@ -139,12 +149,11 @@ void draw() {
   rect(0,0,width,height);
 
   if (users != null) {
-    for (User user : users) {
       //Put it somewhere random on the stage, with a random size and colour
       fill(255,random(50,150));
-      textSize(random(10,30));
-      text(user.getScreenName(), random(width), random(height));
-    }
+      //image((userImage), random(width), random(height), avatarScale, avatarScale);
+      //textSize(user.getFollowersCount());
+      //text(user.getScreenName(), random(width), random(height));
   }
 }
 
