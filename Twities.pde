@@ -1,9 +1,9 @@
 //Build an ArrayList to hold all of the words that we get from the imported tweets
 int rootUserId = -1;
 IDs friendIds; 
-ResponseList<User> users;
+HashMap<Long, User> users = new HashMap();
 HashMap<User, Avatar> avatars = new HashMap();
-HashMap<User, Building> buildings = new HashMap();
+TreeSet<Building> buildings = new TreeSet();
 String messageString = null;
 String cachePrefix = "cache/";
 
@@ -85,17 +85,21 @@ void setup() {
     long[] followingMaster = friendIds.getIDs();
 
     TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(twitter, followingMaster, cachePrefixForFile("lookupUsers"));
-    users = (ResponseList<User>)loadFromCacheOrRequest(lookupCall);
-    if (users != null) {
-      logLine("Got " + users.size() + " users!");
+    ResponseList<User> usersResponse = (ResponseList<User>)loadFromCacheOrRequest(lookupCall);
+    if (usersResponse != null) {
+      logLine("Got " + usersResponse.size() + " usersResponse!");
     } else {
       logLine("No users were found.");
       noLoop();
       exit();
     }
 
+    for (User user : usersResponse) {
+      users.put(user.getId(), user);
+    }
+
     //Load avatars
-    for (User user : users) {
+    for (User user : users.values()) {
       try {
         Avatar userAvatar = new Avatar(user);
         avatars.put(user, userAvatar);
@@ -106,22 +110,29 @@ void setup() {
 
     //Create buildings
     {
+      //Create them
+      for (Avatar avatar : avatars.values()) {
+        Building building = new Building(avatar);
+        buildings.add(building); //Will use natural sort order of Comparable<Building>
+      }
+      //Position buildings
       int columns = 7;
       int xCounter = 0;
       int yCounter = 0;
       float spacer = 60;
-      for (Avatar avatar : avatars.values()) {
-        Building building = new Building(avatar);
+      for (Building building : buildings) {
         //For now, arrange in a grid
         println("x: " + xCounter % columns + " y: " + yCounter);
         building.position.x = spacer * (xCounter % columns);
         building.position.y = spacer * yCounter;
-        buildings.put(avatar.user, building);
         xCounter++;
         if ((xCounter % columns) == (columns - 1)) {
           yCounter++;
         }
       }
+
+      printDelimiter();
+      println("prepared buildings:\n" + buildings);
     }
 
     messageString = null;
@@ -190,7 +201,7 @@ Object loadFromCacheOrRequest(TwitterCachedCall call) {
 void draw() {
   background(0);
 
-  for (Building building : buildings.values()) {
+  for (Building building : buildings) {
     //building.position.x += 0.01 * building.scale;
     //building.position.y += 0.01 * building.scale;
     building.draw();
