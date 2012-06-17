@@ -49,8 +49,22 @@ void setup() {
     printDelimiter(1);
 
     //Get following IDs
-    IDs followingIds;
-    {
+    IDs followingIds = null;
+    String followingIdsFileName = "data/followingIds.bin";
+    InputStream fis = createInput(followingIdsFileName);
+    if (fis != null) {
+      try {
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        followingIds = (IDs)ois.readObject();
+        ois.close();
+        println("Successful cache load from " + followingIdsFileName);
+      } catch (Exception e) {
+        println("Exception deserializing cache at " + followingIdsFileName);
+      }
+      fis.close();
+    }
+
+    if (followingIds == null) {
       long cursor = -1; //If we get a paginated API response, keep track of our position
       System.out.println("Listing following ids.");
       do {
@@ -58,16 +72,41 @@ void setup() {
           for (long id : followingIds.getIDs()) {
               //System.out.format("%d\n", id);
           }
-          println("Got Friend IDs: " + followingIds.getIDs().length);
       } while ((cursor = followingIds.getNextCursor()) != 0);
+
+      OutputStream fos = createOutput(followingIdsFileName);
+      if (fos != null) {
+        try {
+          ObjectOutputStream oos = new ObjectOutputStream(fos);
+          oos.writeObject(followingIds);
+          oos.close();
+          fos.close();
+          println("Wrote follower IDs to cache at " + followingIdsFileName);
+        } catch (IOException ioe) {
+          println("IOException writing to cache file at " + followingIdsFileName
+              + ". Exception: " + ioe.getMessage());
+        }
+      }
+    }
+
+    if (followingIds != null) {
+      println("Got Friend IDs: " + followingIds.getIDs().length);
+    } else {
+      println("Failed to get Friend IDs. :(");
     }
 
     //Get user info for following
+    /*
     long[] followingMaster = followingIds.getIDs();
     println("followingMaster = " + java.util.Arrays.asList(followingMaster));
     printDelimiter(1);
 
-    long[][] followingChunks = divideArray(followingMaster, 100);
+    //long[][] followingChunks = divideArray(followingMaster, 100);
+
+    //Debugging - limit this to one API request.
+    long[][] followingChunks = new long[1][];
+    followingChunks[0] = Arrays.copyOfRange(followingMaster, 0, 100);
+
     println("followingChunks = " + java.util.Arrays.asList(followingChunks));
     printDelimiter(1);
 
@@ -84,6 +123,7 @@ void setup() {
       }
       System.out.println("Successfully looked up users.");
     }
+    */
 
 
     /*
@@ -114,9 +154,10 @@ void setup() {
     }
     */
 
-  }
-  catch (TwitterException te) {
+  } catch (TwitterException te) {
     println("Couldn't connect: " + te);
+  } catch (Exception e) {
+    println("Unknown exception:" + e);
   }
 
   noLoop();
