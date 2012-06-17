@@ -1,9 +1,10 @@
 //Build an ArrayList to hold all of the words that we get from the imported tweets
-ArrayList<String> words = new ArrayList();
+int rootUserId = -1;
 IDs friendIds; 
 ResponseList<User> users;
 HashMap<User, Avatar> avatars = new HashMap();
 String messageString = null;
+String cachePrefix = "cache/";
 
 //---------- Loading Functions ---------------//
 
@@ -36,7 +37,6 @@ void setup() {
     exit();
   }
 
-  int rootUserId = -1;
   try {
     rootUserId = Integer.parseInt(rootUserName[0]);
   } catch (NumberFormatException nfe) {
@@ -69,7 +69,7 @@ void setup() {
     printDelimiter(1);
 
     //Get following IDs
-    TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(twitter, rootUserId, "followingIds/"+rootUserId+".bin");
+    TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(twitter, rootUserId, cachePrefixForFile("followingIds"));
     friendIds = (IDs)loadFromCacheOrRequest(friendsIdCall);
 
     if (friendIds != null) {
@@ -83,7 +83,7 @@ void setup() {
     //Get user info for following
     long[] followingMaster = friendIds.getIDs();
 
-    TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(twitter, followingMaster, "lookupUsers/"+rootUserId+".bin");
+    TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(twitter, followingMaster, cachePrefixForFile("lookupUsers"));
     users = (ResponseList<User>)loadFromCacheOrRequest(lookupCall);
     if (users != null) {
       logLine("Got " + users.size() + " users!");
@@ -110,13 +110,21 @@ void setup() {
 }
 
 /**
+ * Compute the path to the cache file from a base file name, taking into account the root user.
+ * Avatars are cached seperately and shared between users.
+ */
+String cachePrefixForFile(String filename) {
+  return cachePrefix + filename + "/" + rootUserId + ".bin";
+}
+
+/**
  * Attempts to load a TwitterCachedCall from a local file on disk, and if the local file doesn't exist, it attempts to perform the call and cache the results in the missing file.
  *
  * @return Object|null The object returned from the request. null if there was a failure.
  */
 Object loadFromCacheOrRequest(TwitterCachedCall call) {
   Serializable responseObject = null;
-  String cacheFileName = "data/" + call.getCacheFileName();
+  String cacheFileName = call.getCacheFileName();
 
   //Try to load the response from the cache
   InputStream fis = createInput(cacheFileName);
