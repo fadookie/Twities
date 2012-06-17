@@ -37,9 +37,9 @@ void setup() {
     println("GOT RESPONSE:\n\n"+result);
     printDelimiter();
     
-    ArrayList tweets = (ArrayList)result.getTweets();
+    List<Tweet> tweets = result.getTweets();
     for (int i = 0; i < tweets.size(); i++) {
-      Tweet t = (Tweet)tweets.get(i);
+      Tweet t = tweets.get(i);
       String user = t.getFromUser();
       String msg = t.getText();
       Date d = t.getCreatedAt();
