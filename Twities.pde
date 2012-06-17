@@ -1,11 +1,11 @@
 //Build an ArrayList to hold all of the words that we get from the imported tweets
+CacheManager cacheManager = new CacheManager();
 long rootUserId = -1;
 IDs friendIds; 
 HashMap<Long, User> users = new HashMap();
 HashMap<User, Avatar> avatars = new HashMap();
 TreeSet<Building> buildings = new TreeSet();
 String messageString = null;
-String cachePrefix = "cache/";
 
 //---------- Loading Functions ---------------//
 
@@ -73,10 +73,10 @@ void setup() {
     TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(
         twitter,
         rootUserId,
-        cachePrefixForFile("followingIds", String.valueOf(rootUserId)),
+        cacheManager.cachePrefixForFile("followingIds", String.valueOf(rootUserId)),
         true /*save on cache miss*/
     );
-    friendIds = (IDs)loadFromCacheOrRequest(friendsIdCall);
+    friendIds = (IDs)cacheManager.loadFromCacheOrRequest(friendsIdCall);
 
     if (friendIds != null) {
       logLine("Got " + friendIds.getIDs().length + " Friend IDs.");
@@ -92,10 +92,10 @@ void setup() {
     TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(
         twitter,
         followingMaster,
-        cachePrefixForFile("lookupUsers"),
+        cacheManager.cachePrefixForFile("lookupUsers"),
         false /*save on cache miss*/
     );
-    ResponseList<User> usersResponse = (ResponseList<User>)loadFromCacheOrRequest(lookupCall);
+    ResponseList<User> usersResponse = (ResponseList<User>)cacheManager.loadFromCacheOrRequest(lookupCall);
     if (usersResponse != null) {
       logLine("Got " + usersResponse.size() + " usersResponse!");
     } else {
@@ -148,91 +148,6 @@ void setup() {
     messageString = null;
 }
 
-/**
- * Compute the path to the shared cache file from a base file name
- * Avatars are cached seperately and shared between users.
- * @param String filename Name of cache file
- */
-String cachePrefixForFile(String filename) {
-  return cachePrefixForFile(filename, "shared");
-}
-/**
- * Compute the path to a group cache file
- * @param String filename Name of cache file
- * @param String groupName Name of group, this is usually the User ID string. Group name "shared" is reserved for shared caches.
- */
-String cachePrefixForFile(String filename, String groupName) {
-  return cachePrefix + filename + "/" + groupName + ".bin";
-}
-
-/**
- * Attempts to load a TwitterCachedCall from a local file on disk, and if the local file doesn't exist, it attempts to perform the call and cache the results in the missing file.
- *
- * @return Object|null The object returned from the request. null if there was a failure.
- */
-Object loadFromCacheOrRequest(TwitterCachedCall call) {
-  Serializable responseObject = null;
-  String cacheFileName = call.getCacheFileName();
-
-  //Try to load the response from the cache
-  responseObject = loadFromCache(cacheFileName);
-
-  if (responseObject == null) {
-    //Cache miss, perform the actual API call
-    logLine("Executing API call: " + call);
-    responseObject = call.executeCall();
-
-    if (responseObject != null) {
-      if (call.saveOnCacheMiss()) {
-        //Cache the response
-        saveToCache(cacheFileName, responseObject);
-      }
-    } else {
-      logLine("API call " + call + " failed and no cache is available.");
-    }
-  }
-  return responseObject;
-}
-
-/**
- * Load an object from the cache
- */
-Serializable loadFromCache(String cacheFileName) {
-  Serializable cachedObject = null;
-  InputStream fis = createInput(cacheFileName);
-  if (fis != null) {
-    try {
-      ObjectInputStream ois = new ObjectInputStream(fis);
-      cachedObject = (Serializable)ois.readObject();
-      ois.close();
-      fis.close();
-      logLine("Successful cache load from " + cacheFileName);
-    } catch (Exception e) {
-      logLine("Exception deserializing cache at " + cacheFileName);
-    }
-  }
-  
-  return cachedObject;
-}
-
-/**
- * Save an object to the cache
- */
-void saveToCache(String cacheFileName, Serializable object) {
-  OutputStream fos = createOutput(cacheFileName);
-  if (fos != null) {
-    try {
-      ObjectOutputStream oos = new ObjectOutputStream(fos);
-      oos.writeObject(object);
-      oos.close();
-      fos.close();
-      logLine("Wrote " + object + " to cache at " + cacheFileName);
-    } catch (IOException ioe) {
-      logLine("IOException writing " + object + " to cache file at " + cacheFileName
-          + ". Exception: " + ioe.getMessage());
-    }
-  }
-}
 
 //---------- Drawing Functions ---------------//
 

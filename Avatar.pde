@@ -27,6 +27,6 @@ class Avatar {
     String[] components = url.split("\\.");
     //logLine("url: " +url+ " components: " + components + " length : " + components.length);
     String extension = (components.length > 0) ? components[components.length - 1] : "";
-    return cachePrefix + "avatars/" + user.getId() + "." + extension;
+    return cacheManager.cachePrefix + "avatars/" + user.getId() + "." + extension;
   }
 }
