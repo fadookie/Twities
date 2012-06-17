@@ -1,5 +1,5 @@
 //Build an ArrayList to hold all of the words that we get from the imported tweets
-int rootUserId = -1;
+long rootUserId = -1;
 IDs friendIds; 
 HashMap<Long, User> users = new HashMap();
 HashMap<User, Avatar> avatars = new HashMap();
@@ -39,7 +39,7 @@ void setup() {
   }
 
   try {
-    rootUserId = Integer.parseInt(rootUserName[0]);
+    rootUserId = Long.parseLong(rootUserName[0]);
   } catch (NumberFormatException nfe) {
     logLine("Invalid user ID number: " + rootUserName[0] + " exception: " + nfe);
     noLoop();
@@ -70,7 +70,12 @@ void setup() {
     printDelimiter(1);
 
     //Get following IDs
-    TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(twitter, rootUserId, cachePrefixForFile("followingIds"));
+    TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(
+        twitter,
+        rootUserId,
+        cachePrefixForFile("followingIds", String.valueOf(rootUserId)),
+        true /*save on cache miss*/
+    );
     friendIds = (IDs)loadFromCacheOrRequest(friendsIdCall);
 
     if (friendIds != null) {
@@ -84,7 +89,12 @@ void setup() {
     //Get user info for following
     long[] followingMaster = friendIds.getIDs();
 
-    TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(twitter, followingMaster, cachePrefixForFile("lookupUsers"));
+    TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(
+        twitter,
+        followingMaster,
+        cachePrefixForFile("lookupUsers"),
+        false /*save on cache miss*/
+    );
     ResponseList<User> usersResponse = (ResponseList<User>)loadFromCacheOrRequest(lookupCall);
     if (usersResponse != null) {
       logLine("Got " + usersResponse.size() + " usersResponse!");
@@ -122,7 +132,7 @@ void setup() {
       float spacer = 60;
       for (Building building : buildings) {
         //For now, arrange in a grid
-        println("x: " + xCounter % columns + " y: " + yCounter);
+        //println("x: " + xCounter % columns + " y: " + yCounter);
         building.position.x = spacer * (xCounter % columns);
         building.position.y = spacer * yCounter;
         xCounter++;
@@ -143,7 +153,10 @@ void setup() {
  * Avatars are cached seperately and shared between users.
  */
 String cachePrefixForFile(String filename) {
-  return cachePrefix + filename + "/" + rootUserId + ".bin";
+  return cachePrefixForFile(filename, "shared");
+}
+String cachePrefixForFile(String filename, String groupName) {
+  return cachePrefix + filename + "/" + groupName + ".bin";
 }
 
 /**
@@ -156,18 +169,7 @@ Object loadFromCacheOrRequest(TwitterCachedCall call) {
   String cacheFileName = call.getCacheFileName();
 
   //Try to load the response from the cache
-  InputStream fis = createInput(cacheFileName);
-  if (fis != null) {
-    try {
-      ObjectInputStream ois = new ObjectInputStream(fis);
-      responseObject = (Serializable)ois.readObject();
-      ois.close();
-      fis.close();
-      logLine("Successful cache load from " + cacheFileName);
-    } catch (Exception e) {
-      logLine("Exception deserializing cache at " + cacheFileName);
-    }
-  }
+  responseObject = loadFromCache(cacheFileName);
 
   if (responseObject == null) {
     //Cache miss, perform the actual API call
@@ -175,25 +177,49 @@ Object loadFromCacheOrRequest(TwitterCachedCall call) {
     responseObject = call.executeCall();
 
     if (responseObject != null) {
-      //Cache the response
-      OutputStream fos = createOutput(cacheFileName);
-      if (fos != null) {
-        try {
-          ObjectOutputStream oos = new ObjectOutputStream(fos);
-          oos.writeObject(responseObject);
-          oos.close();
-          fos.close();
-          logLine("Wrote " + call + " to cache at " + cacheFileName);
-        } catch (IOException ioe) {
-          logLine("IOException writing " + call + " to cache file at " + cacheFileName
-              + ". Exception: " + ioe.getMessage());
-        }
+      if (call.saveOnCacheMiss()) {
+        //Cache the response
+        saveToCache(cacheFileName, responseObject);
       }
     } else {
       logLine("API call " + call + " failed and no cache is available.");
     }
   }
   return responseObject;
+}
+
+Serializable loadFromCache(String cacheFileName) {
+  Serializable cachedObject = null;
+  InputStream fis = createInput(cacheFileName);
+  if (fis != null) {
+    try {
+      ObjectInputStream ois = new ObjectInputStream(fis);
+      cachedObject = (Serializable)ois.readObject();
+      ois.close();
+      fis.close();
+      logLine("Successful cache load from " + cacheFileName);
+    } catch (Exception e) {
+      logLine("Exception deserializing cache at " + cacheFileName);
+    }
+  }
+  
+  return cachedObject;
+}
+
+void saveToCache(String cacheFileName, Serializable object) {
+  OutputStream fos = createOutput(cacheFileName);
+  if (fos != null) {
+    try {
+      ObjectOutputStream oos = new ObjectOutputStream(fos);
+      oos.writeObject(object);
+      oos.close();
+      fos.close();
+      logLine("Wrote " + object + " to cache at " + cacheFileName);
+    } catch (IOException ioe) {
+      logLine("IOException writing " + object + " to cache file at " + cacheFileName
+          + ". Exception: " + ioe.getMessage());
+    }
+  }
 }
 
 //---------- Drawing Functions ---------------//

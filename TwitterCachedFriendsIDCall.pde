@@ -5,16 +5,22 @@ class TwitterCachedFriendsIDCall implements TwitterCachedCall {
   }
 
   private Twitter twitter;
-  private int userId;
+  private long userId;
+  private boolean saveOnCacheMiss;
   
-  TwitterCachedFriendsIDCall(Twitter t, int id, String cacheFileName) {
+  TwitterCachedFriendsIDCall(Twitter t, long id, String cacheFileName, boolean saveOnCacheMiss) {
     userId = id;
     this.cacheFileName = cacheFileName;
+    this.saveOnCacheMiss = saveOnCacheMiss;
     setTwitter(t);
   }
 
   void setTwitter(Twitter t) {
     twitter = t;
+  }
+
+  boolean saveOnCacheMiss() {
+    return saveOnCacheMiss;
   }
 
   Serializable executeCall() {

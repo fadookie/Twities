@@ -6,15 +6,21 @@ class TwitterCachedLookupUsersCall implements TwitterCachedCall {
 
   private Twitter twitter;
   private long[] lookupIds;
+  private boolean saveOnCacheMiss;
   
-  TwitterCachedLookupUsersCall(Twitter t, long[] lookupIds, String cacheFileName) {
+  TwitterCachedLookupUsersCall(Twitter t, long[] lookupIds, String cacheFileName, boolean saveOnCacheMiss) {
     this.lookupIds = lookupIds;
     this.cacheFileName = cacheFileName;
+    this.saveOnCacheMiss = saveOnCacheMiss;
     setTwitter(t);
   }
 
   void setTwitter(Twitter t) {
     twitter = t;
+  }
+
+  boolean saveOnCacheMiss() {
+    return saveOnCacheMiss;
   }
 
   Serializable executeCall() {
