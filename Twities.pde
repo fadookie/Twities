@@ -49,139 +49,122 @@ void setup() {
 
   logLine("READ USER CONFIG file " + userFileName + ", proceeding with root User ID " + rootUserId + "\n\n");
   
-    //Make the twitter object
-    Twitter twitter = new TwitterFactory(cb.build()).getInstance();
+  //Make the twitter object
+  Twitter twitter = new TwitterFactory(cb.build()).getInstance();
 
-    //Get follower IDs
-    /*
-    IDs followerIds;
+  printDelimiter(1);
+
+  //Load users from cache if available
+  users = (HashMap<Long, User>)cacheManager.loadFromCache(cacheManager.cachePrefixForFile("users"));
+  if (users == null) {
+    users = new HashMap<Long, User>();
+  }
+
+  //Get following IDs
+  TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(
+      twitter,
+      rootUserId,
+      cacheManager.cachePrefixForFile("followingIds", String.valueOf(rootUserId)),
+      true /*save on cache miss*/
+  );
+  friendIds = (IDs)cacheManager.loadFromCacheOrRequest(friendsIdCall);
+
+  if (friendIds != null) {
+    logLine("Got " + friendIds.getIDs().length + " Friend IDs.");
+  } else {
+    logLine("Failed to get Friend IDs. :(");
+    noLoop();
+    exit();
+  }
+
+  //Get user info for following
+  long[] followingMaster = friendIds.getIDs();
+
+  //Use set operations to pare list down to only uncached users
+  //Stupid Java... we have to manually convert long to Long
+  HashSet<Long> followingNotCached = new HashSet<Long>(followingMaster.length);
+  for (long id : followingMaster)
+  {
+    followingNotCached.add(id);
+  }
+  followingNotCached.removeAll(users.keySet());
+  
+  if (followingNotCached.size() > 0) {
+    //We need to request the info for some users that aren't in our cache.
+    //First we need to convert the HashSet<Long> back to long[] :(
+    long[] followingNotCachedArray = new long[followingNotCached.size()];
     {
-      long cursor = -1; //If we get a paginated API response, keep track of our position
-      logLine("Listing followers's ids.");
-      do {
-          followerIds = twitter.getFollowersIDs(rootUserId, cursor);
-          for (long id : followerIds.getIDs()) {
-              //System.out.format("%d\n", id);
-          }
-          logLine("Got Follower IDs: " + followerIds.getIDs().length);
-      } while ((cursor = followerIds.getNextCursor()) != 0);
-    }
-    */
-
-    printDelimiter(1);
-
-
-    //Load users from cache if available
-    users = (HashMap<Long, User>)cacheManager.loadFromCache(cacheManager.cachePrefixForFile("users"));
-    if (users == null) {
-      users = new HashMap<Long, User>();
+      int i = 0;
+      for (Long id : followingNotCached) {
+        followingNotCachedArray[i] = id;
+        i++;
+      }
     }
 
-    //Get following IDs
-    TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(
+    TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(
         twitter,
-        rootUserId,
-        cacheManager.cachePrefixForFile("followingIds", String.valueOf(rootUserId)),
-        true /*save on cache miss*/
+        followingNotCachedArray,
+        cacheManager.cachePrefixForFile("lookupUsers"),
+        false /*save on cache miss*/
     );
-    friendIds = (IDs)cacheManager.loadFromCacheOrRequest(friendsIdCall);
-
-    if (friendIds != null) {
-      logLine("Got " + friendIds.getIDs().length + " Friend IDs.");
+    ResponseList<User> usersResponse = (ResponseList<User>)cacheManager.loadFromCacheOrRequest(lookupCall);
+    if (usersResponse != null) {
+      logLine("Got " + usersResponse.size() + " usersResponse!");
     } else {
-      logLine("Failed to get Friend IDs. :(");
+      logLine("No users were found.");
       noLoop();
       exit();
     }
 
-    //Get user info for following
-    long[] followingMaster = friendIds.getIDs();
-
-    //Use set operations to pare list down to only uncached users
-    //Stupid Java... we have to manually convert long to Long
-    HashSet<Long> followingNotCached = new HashSet<Long>(followingMaster.length);
-    for (long id : followingMaster)
-    {
-      followingNotCached.add(id);
-    }
-    followingNotCached.removeAll(users.keySet());
-    
-    if (followingNotCached.size() > 0) {
-      //We need to request the info for some users that aren't in our cache.
-      //First we need to convert the HashSet<Long> back to long[] :(
-      long[] followingNotCachedArray = new long[followingNotCached.size()];
-      {
-        int i = 0;
-        for (Long id : followingNotCached) {
-          followingNotCachedArray[i] = id;
-          i++;
-        }
-      }
-
-      TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(
-          twitter,
-          followingNotCachedArray,
-          cacheManager.cachePrefixForFile("lookupUsers"),
-          false /*save on cache miss*/
-      );
-      ResponseList<User> usersResponse = (ResponseList<User>)cacheManager.loadFromCacheOrRequest(lookupCall);
-      if (usersResponse != null) {
-        logLine("Got " + usersResponse.size() + " usersResponse!");
-      } else {
-        logLine("No users were found.");
-        noLoop();
-        exit();
-      }
-
-      for (User user : usersResponse) {
-        users.put(user.getId(), user);
-        println("fetched user " + user.getId());
-      }
-
-      //Write new users map to cache
-      printDelimiter(5);
-      println("Writing updated users map to cache.");
-      cacheManager.saveToCache(cacheManager.cachePrefixForFile("users"), users);
+    for (User user : usersResponse) {
+      users.put(user.getId(), user);
+      println("fetched user " + user.getId());
     }
 
-    //Load avatars
-    for (User user : users.values()) {
-      try {
-        Avatar userAvatar = new Avatar(user);
-        avatars.put(user, userAvatar);
-      } catch (IOException e) {
-        logLine("IOException when trying to load Avatar at " + user.getProfileImageURL().toString());
+    //Write new users map to cache
+    printDelimiter(5);
+    println("Writing updated users map to cache.");
+    cacheManager.saveToCache(cacheManager.cachePrefixForFile("users"), users);
+  }
+
+  //Load avatars
+  for (User user : users.values()) {
+    try {
+      Avatar userAvatar = new Avatar(user);
+      avatars.put(user, userAvatar);
+    } catch (IOException e) {
+      logLine("IOException when trying to load Avatar at " + user.getProfileImageURL().toString());
+    }
+  }
+
+  //Create buildings
+  {
+    //Create them
+    for (Avatar avatar : avatars.values()) {
+      Building building = new Building(avatar);
+      buildings.add(building); //Will use natural sort order of Comparable<Building>
+    }
+    //Position buildings
+    int columns = 7;
+    int xCounter = 0;
+    int yCounter = 0;
+    float spacer = 60;
+    for (Building building : buildings) {
+      //For now, arrange in a grid
+      //println("x: " + xCounter % columns + " y: " + yCounter);
+      building.position.x = spacer * (xCounter % columns);
+      building.position.y = spacer * yCounter;
+      xCounter++;
+      if ((xCounter % columns) == (columns - 1)) {
+        yCounter++;
       }
     }
 
-    //Create buildings
-    {
-      //Create them
-      for (Avatar avatar : avatars.values()) {
-        Building building = new Building(avatar);
-        buildings.add(building); //Will use natural sort order of Comparable<Building>
-      }
-      //Position buildings
-      int columns = 7;
-      int xCounter = 0;
-      int yCounter = 0;
-      float spacer = 60;
-      for (Building building : buildings) {
-        //For now, arrange in a grid
-        //println("x: " + xCounter % columns + " y: " + yCounter);
-        building.position.x = spacer * (xCounter % columns);
-        building.position.y = spacer * yCounter;
-        xCounter++;
-        if ((xCounter % columns) == (columns - 1)) {
-          yCounter++;
-        }
-      }
+    printDelimiter(1);
+    println("prepared buildings.");
+  }
 
-      printDelimiter(1);
-      println("prepared buildings.");
-    }
-
-    messageString = null;
+  messageString = null;
 }
 
 
