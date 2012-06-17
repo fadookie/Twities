@@ -3,6 +3,7 @@ class Avatar {
   float scale;
   User user;
   PImage image;
+  PVector position = new PVector();
 
   Avatar(User user) throws IOException {
     this.user = user;
@@ -30,5 +31,14 @@ class Avatar {
     //println("url: " +url+ " components: " + components + " length : " + components.length);
     String extension = (components.length > 0) ? components[components.length - 1] : "";
     return "data/avatars/" + user.getId() + "." + extension;
+  }
+
+  void draw() {
+    if (image != null) {
+      pushMatrix();
+      translate(position.x, position.y);
+      image(image, 0, 0, scale, scale);
+      popMatrix();
+    }
   }
 }

@@ -83,6 +83,9 @@ void setup() {
     for (User user : users) {
       try {
         Avatar userAvatar = new Avatar(user);
+        //for now, randomize placement
+        userAvatar.position.x = random(width);
+        userAvatar.position.y = random(height);
         avatars.put(user, userAvatar);
       } catch (IOException e) {
         println("IOException when trying to load Avatar at " + user.getProfileImageURL().toString());
@@ -148,12 +151,8 @@ void draw() {
   fill(0,1);
   rect(0,0,width,height);
 
-  if (users != null) {
-      //Put it somewhere random on the stage, with a random size and colour
-      fill(255,random(50,150));
-      //image((userImage), random(width), random(height), avatarScale, avatarScale);
-      //textSize(user.getFollowersCount());
-      //text(user.getScreenName(), random(width), random(height));
+  for (Avatar avatar : avatars.values()) {
+    avatar.draw();
   }
 }
 
