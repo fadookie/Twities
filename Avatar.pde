@@ -18,17 +18,17 @@ class Avatar {
       if (image == null) {
         throw new IOException();
       }
-      println("Got image from " + user.getProfileImageURL());
+      logLine("Got image from " + user.getProfileImageURL());
       image.save(cacheLocation);
-      println("Saved image to " + cacheLocation);
+      logLine("Saved image to " + cacheLocation);
     } else {
-      println("Got image from cache at " + cacheLocation);
+      logLine("Got image from cache at " + cacheLocation);
     }
   }
 
   String getCacheLocation() {
     String[] components = url.split("\\.");
-    //println("url: " +url+ " components: " + components + " length : " + components.length);
+    //logLine("url: " +url+ " components: " + components + " length : " + components.length);
     String extension = (components.length > 0) ? components[components.length - 1] : "";
     return "data/avatars/" + user.getId() + "." + extension;
   }

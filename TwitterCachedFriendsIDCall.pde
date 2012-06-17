@@ -25,7 +25,7 @@ class TwitterCachedFriendsIDCall implements TwitterCachedCall {
         responseObject = twitter.getFriendsIDs(userId, cursor);
       } while ((cursor = responseObject.getNextCursor()) != 0);
     } catch (TwitterException te) {
-      println("Couldn't connect: " + te);
+      logLine("Couldn't connect: " + te);
     }
     return responseObject;
   }

@@ -3,6 +3,7 @@ ArrayList<String> words = new ArrayList();
 IDs friendIds; 
 ResponseList<User> users;
 HashMap<User, Avatar> avatars = new HashMap();
+String messageString = null;
 
 //---------- Loading Functions ---------------//
 
@@ -17,11 +18,11 @@ void setup() {
   String configFileName = "credentials.txt";
   String credentials[] = loadStrings(configFileName);
   if ((null == credentials) || (credentials.length < 4)) {
-    println("Invalid config at " + configFileName);
+    logLine("Invalid config at " + configFileName);
     noLoop();
     exit();
   }
-  println("READ CREDENTIALS file " + configFileName + ":\n\n" + java.util.Arrays.asList(credentials));
+  logLine("READ CREDENTIALS file " + configFileName + ":\n\n" + java.util.Arrays.asList(credentials));
   cb.setOAuthConsumerKey(credentials[0]);
   cb.setOAuthConsumerSecret(credentials[1]);
   cb.setOAuthAccessToken(credentials[2]);
@@ -33,20 +34,19 @@ void setup() {
   
     //Make the twitter object
     Twitter twitter = new TwitterFactory(cb.build()).getInstance();
-    
 
     //Get follower IDs
     /*
     IDs followerIds;
     {
       long cursor = -1; //If we get a paginated API response, keep track of our position
-      println("Listing followers's ids.");
+      logLine("Listing followers's ids.");
       do {
           followerIds = twitter.getFollowersIDs(rootUserId, cursor);
           for (long id : followerIds.getIDs()) {
               //System.out.format("%d\n", id);
           }
-          println("Got Follower IDs: " + followerIds.getIDs().length);
+          logLine("Got Follower IDs: " + followerIds.getIDs().length);
       } while ((cursor = followerIds.getNextCursor()) != 0);
     }
     */
@@ -58,9 +58,9 @@ void setup() {
     friendIds = (IDs)loadFromCacheOrRequest(friendsIdCall);
 
     if (friendIds != null) {
-      println("Got " + friendIds.getIDs().length + " Friend IDs.");
+      logLine("Got " + friendIds.getIDs().length + " Friend IDs.");
     } else {
-      println("Failed to get Friend IDs. :(");
+      logLine("Failed to get Friend IDs. :(");
       noLoop();
       exit();
     }
@@ -71,9 +71,9 @@ void setup() {
     TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(twitter, followingMaster, "lookupUsers.bin");
     users = (ResponseList<User>)loadFromCacheOrRequest(lookupCall);
     if (users != null) {
-      println("Got " + users.size() + " users!");
+      logLine("Got " + users.size() + " users!");
     } else {
-      println("No users were found.");
+      logLine("No users were found.");
       noLoop();
       exit();
     }
@@ -87,9 +87,11 @@ void setup() {
         userAvatar.position.y = random(height);
         avatars.put(user, userAvatar);
       } catch (IOException e) {
-        println("IOException when trying to load Avatar at " + user.getProfileImageURL().toString());
+        logLine("IOException when trying to load Avatar at " + user.getProfileImageURL().toString());
       }
     }
+
+    messageString = null;
 }
 
 /**
@@ -109,15 +111,15 @@ Object loadFromCacheOrRequest(TwitterCachedCall call) {
       responseObject = (Serializable)ois.readObject();
       ois.close();
       fis.close();
-      println("Successful cache load from " + cacheFileName);
+      logLine("Successful cache load from " + cacheFileName);
     } catch (Exception e) {
-      println("Exception deserializing cache at " + cacheFileName);
+      logLine("Exception deserializing cache at " + cacheFileName);
     }
   }
 
   if (responseObject == null) {
     //Cache miss, perform the actual API call
-    System.out.println("Executing API call: " + call);
+    logLine("Executing API call: " + call);
     responseObject = call.executeCall();
 
     if (responseObject != null) {
@@ -129,14 +131,14 @@ Object loadFromCacheOrRequest(TwitterCachedCall call) {
           oos.writeObject(responseObject);
           oos.close();
           fos.close();
-          println("Wrote " + call + " to cache at " + cacheFileName);
+          logLine("Wrote " + call + " to cache at " + cacheFileName);
         } catch (IOException ioe) {
-          println("IOException writing " + call + " to cache file at " + cacheFileName
+          logLine("IOException writing " + call + " to cache file at " + cacheFileName
               + ". Exception: " + ioe.getMessage());
         }
       }
     } else {
-      println("API call " + call + " failed and no cache is available.");
+      logLine("API call " + call + " failed and no cache is available.");
     }
   }
   return responseObject;
@@ -149,6 +151,10 @@ void draw() {
     avatar.position.x += 0.01 * avatar.scale;
     avatar.position.y += 0.01 * avatar.scale;
     avatar.draw();
+  }
+
+  if (messageString != null) {
+    text(messageString, 0, height - 50);
   }
 }
 
@@ -167,6 +173,11 @@ long[][] divideArray(long[] source, int chunksize) {
         }
 
         return ret;
+}
+
+void logLine(String message) {
+  //messageString = message; //TODO: display loading to user somehow
+  println(message);
 }
 
 void printDelimiter() {

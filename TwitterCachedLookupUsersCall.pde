@@ -37,15 +37,15 @@ class TwitterCachedLookupUsersCall implements TwitterCachedCall {
         }
         for (User user : userResponseBatch) {
             if (user.getStatus() != null) {
-                println("@" + user.getScreenName() + " - " + user.getStatus().getText());
+                logLine("@" + user.getScreenName() + " - " + user.getStatus().getText());
             } else {
                 // the user is protected
-                println("@" + user.getScreenName());
+                logLine("@" + user.getScreenName());
             }
         }
-        System.out.println("Successfully looked up users.");
+        logLine("Successfully looked up users.");
       } catch (TwitterException te) {
-        println("Couldn't connect: " + te);
+        logLine("Couldn't connect: " + te);
       }
     }
     return users;
