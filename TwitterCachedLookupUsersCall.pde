@@ -25,34 +25,37 @@ class TwitterCachedLookupUsersCall implements TwitterCachedCall {
 
   Serializable executeCall() {
     ResponseList<User> users = null;
+    if (lookupIds.length > 0) {
+      long[][] lookupIdChunks = divideArray(lookupIds, 100);
 
-    long[][] lookupIdChunks = divideArray(lookupIds, 100);
+      //Debugging - limit this to one API request.
+      //long[][] lookupIdChunks = new long[1][];
+      //lookupIdChunks[0] = Arrays.copyOfRange(lookupIds, 0, 100);
 
-    //Debugging - limit this to one API request.
-    //long[][] lookupIdChunks = new long[1][];
-    //lookupIdChunks[0] = Arrays.copyOfRange(lookupIds, 0, 100);
-
-    for (long[] currentIdBatch : lookupIdChunks) {
-      try {
-        //Lookup users for following IDs
-        ResponseList<User> userResponseBatch = twitter.lookupUsers(currentIdBatch);
-        if (users == null) {
-          users = userResponseBatch;
-        } else {
-          users.addAll(userResponseBatch);
+      for (long[] currentIdBatch : lookupIdChunks) {
+        try {
+          //Lookup users for following IDs
+          ResponseList<User> userResponseBatch = twitter.lookupUsers(currentIdBatch);
+          if (users == null) {
+            users = userResponseBatch;
+          } else {
+            users.addAll(userResponseBatch);
+          }
+          for (User user : userResponseBatch) {
+              if (user.getStatus() != null) {
+                  logLine("@" + user.getScreenName() + " - " + user.getStatus().getText());
+              } else {
+                  // the user is protected
+                  logLine("@" + user.getScreenName());
+              }
+          }
+          logLine("Successfully looked up users.");
+        } catch (TwitterException te) {
+          logLine("Couldn't connect: " + te);
         }
-        for (User user : userResponseBatch) {
-            if (user.getStatus() != null) {
-                logLine("@" + user.getScreenName() + " - " + user.getStatus().getText());
-            } else {
-                // the user is protected
-                logLine("@" + user.getScreenName());
-            }
-        }
-        logLine("Successfully looked up users.");
-      } catch (TwitterException te) {
-        logLine("Couldn't connect: " + te);
       }
+    } else {
+      println("Lookup aborted, lookupIds array was empty.");
     }
     return users;
   }

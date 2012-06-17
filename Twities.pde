@@ -13,7 +13,7 @@ void setup() {
   size(800,800, OPENGL);
   background(0);
  
-  //Credentials
+  //Set up Twitter API Credentials
   ConfigurationBuilder cb = new ConfigurationBuilder();
   
   //We expect a config file containing newline-delimited consumer key, consumer secret, OAuth access token, and OAuth access token secret.
@@ -24,12 +24,13 @@ void setup() {
     noLoop();
     exit();
   }
-  logLine("READ CREDENTIALS file " + configFileName + ":\n\n" + java.util.Arrays.asList(credentials));
+  //logLine("READ CREDENTIALS file " + configFileName + ":\n\n" + java.util.Arrays.asList(credentials));
   cb.setOAuthConsumerKey(credentials[0]);
   cb.setOAuthConsumerSecret(credentials[1]);
   cb.setOAuthAccessToken(credentials[2]);
   cb.setOAuthAccessTokenSecret(credentials[3]);
 
+  //Read in the user name that will be at the center of our graph. TODO: retrieve OAuth token for this user dynamically.
   String userFileName = "rootUser.txt";
   String rootUserName[] = loadStrings(userFileName);
   if ((null == rootUserName) || (rootUserName.length < 1)) {
@@ -96,23 +97,51 @@ void setup() {
     //Get user info for following
     long[] followingMaster = friendIds.getIDs();
 
-    TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(
-        twitter,
-        followingMaster,
-        cacheManager.cachePrefixForFile("lookupUsers"),
-        false /*save on cache miss*/
-    );
-    ResponseList<User> usersResponse = (ResponseList<User>)cacheManager.loadFromCacheOrRequest(lookupCall);
-    if (usersResponse != null) {
-      logLine("Got " + usersResponse.size() + " usersResponse!");
-    } else {
-      logLine("No users were found.");
-      noLoop();
-      exit();
+    //Use set operations to pare list down to only uncached users
+    //Stupid Java... we have to manually convert long to Long
+    HashSet<Long> followingNotCached = new HashSet<Long>(followingMaster.length);
+    for (long id : followingMaster)
+    {
+      followingNotCached.add(id);
     }
+    followingNotCached.removeAll(users.keySet());
+    
+    if (followingNotCached.size() > 0) {
+      //We need to request the info for some users that aren't in our cache.
+      //First we need to convert the HashSet<Long> back to long[] :(
+      long[] followingNotCachedArray = new long[followingNotCached.size()];
+      {
+        int i = 0;
+        for (Long id : followingNotCached) {
+          followingNotCachedArray[i] = id;
+          i++;
+        }
+      }
 
-    for (User user : usersResponse) {
-      users.put(user.getId(), user);
+      TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(
+          twitter,
+          followingNotCachedArray,
+          cacheManager.cachePrefixForFile("lookupUsers"),
+          false /*save on cache miss*/
+      );
+      ResponseList<User> usersResponse = (ResponseList<User>)cacheManager.loadFromCacheOrRequest(lookupCall);
+      if (usersResponse != null) {
+        logLine("Got " + usersResponse.size() + " usersResponse!");
+      } else {
+        logLine("No users were found.");
+        noLoop();
+        exit();
+      }
+
+      for (User user : usersResponse) {
+        users.put(user.getId(), user);
+        println("fetched user " + user.getId());
+      }
+
+      //Write new users map to cache
+      printDelimiter(5);
+      println("Writing updated users map to cache.");
+      cacheManager.saveToCache(cacheManager.cachePrefixForFile("users"), users);
     }
 
     //Load avatars
@@ -148,13 +177,9 @@ void setup() {
         }
       }
 
-      printDelimiter();
+      printDelimiter(1);
       println("prepared buildings.");
     }
-
-    //Write new users map to cache
-    printDelimiter();
-    cacheManager.saveToCache(cacheManager.cachePrefixForFile("users"), users);
 
     messageString = null;
 }
