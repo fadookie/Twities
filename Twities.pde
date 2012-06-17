@@ -23,22 +23,40 @@ void setup() {
   cb.setOAuthAccessToken(credentials[2]);
   cb.setOAuthAccessTokenSecret(credentials[3]);
 
-  int rootUserId = 70665746;
+  //int rootUserId = 156560059;//70665746;
   
   try {
     //Make the twitter object
     Twitter twitter = new TwitterFactory(cb.build()).getInstance();
     
-    long cursor = -1; //If we get a paginated API response, keep track of our position
 
-    IDs ids;
-    println("Listing followers's ids.");
-    do {
-        ids = twitter.getFollowersIDs(rootUserId, cursor);
-        for (long id : ids.getIDs()) {
-            System.out.format("%d\n", id);
-        }
-    } while ((cursor = ids.getNextCursor()) != 0);
+    IDs followerIds;
+    {
+      long cursor = -1; //If we get a paginated API response, keep track of our position
+      println("Listing followers's ids.");
+      do {
+          followerIds = twitter.getFollowersIDs(/*rootUserId,*/ cursor);
+          for (long id : followerIds.getIDs()) {
+              System.out.format("%d\n", id);
+          }
+          println("Got Follower IDs: " + followerIds.getIDs().length);
+      } while ((cursor = followerIds.getNextCursor()) != 0);
+    }
+
+    printDelimiter();
+    IDs followingIds;
+    {
+      long cursor = -1; //If we get a paginated API response, keep track of our position
+      System.out.println("Listing following ids.");
+      do {
+          followingIds = twitter.getFriendsIDs(/*rootUserId,*/ cursor);
+          for (long id : followingIds.getIDs()) {
+              System.out.format("%d\n", id);
+          }
+          println("Got Friend IDs: " + followingIds.getIDs().length);
+      } while ((cursor = followingIds.getNextCursor()) != 0);
+    }
+
 
 
     /*
