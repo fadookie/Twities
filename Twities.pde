@@ -28,9 +28,24 @@ void setup() {
   cb.setOAuthAccessToken(credentials[2]);
   cb.setOAuthAccessTokenSecret(credentials[3]);
 
-  int eliotId = 156560059;
-  int porpId = 70665746;
-  int rootUserId = porpId;
+  String userFileName = "rootUser.txt";
+  String rootUserName[] = loadStrings(userFileName);
+  if ((null == rootUserName) || (rootUserName.length < 1)) {
+    logLine("Invalid root user config file at " + userFileName);
+    noLoop();
+    exit();
+  }
+
+  int rootUserId = -1;
+  try {
+    rootUserId = Integer.parseInt(rootUserName[0]);
+  } catch (NumberFormatException nfe) {
+    logLine("Invalid user ID number: " + rootUserName[0] + " exception: " + nfe);
+    noLoop();
+    exit();
+  }
+
+  logLine("READ USER CONFIG file " + userFileName + ", proceeding with root User ID " + rootUserId + "\n\n");
   
     //Make the twitter object
     Twitter twitter = new TwitterFactory(cb.build()).getInstance();
@@ -54,7 +69,7 @@ void setup() {
     printDelimiter(1);
 
     //Get following IDs
-    TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(twitter, rootUserId, "followingIds.bin");
+    TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(twitter, rootUserId, "followingIds/"+rootUserId+".bin");
     friendIds = (IDs)loadFromCacheOrRequest(friendsIdCall);
 
     if (friendIds != null) {
@@ -68,7 +83,7 @@ void setup() {
     //Get user info for following
     long[] followingMaster = friendIds.getIDs();
 
-    TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(twitter, followingMaster, "lookupUsers.bin");
+    TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(twitter, followingMaster, "lookupUsers/"+rootUserId+".bin");
     users = (ResponseList<User>)loadFromCacheOrRequest(lookupCall);
     if (users != null) {
       logLine("Got " + users.size() + " users!");
