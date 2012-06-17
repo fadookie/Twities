@@ -1,1 +1,7 @@
 [x] Share cache for lookup response? Need to compare incoming followed users w/ already looked up users, request just the delta, add it to the array in memory and then save it out. Need a smarter cache manager object?
+[] Put root user in API request to get profiles, can seperate out later with an in-memory lookup
+[] For now, make city an outwards spiral from the root user, then the largest buildings going down?
+[] In the future, use Fisica with distance joints (or another graphing library) to lay out the city floorplan - Force-based algorithms would be cool! Don't draw with Fisica, just use it to store data coordinates.
+[] 3D renderer
+    [] Doesn't have to look like a real city, but maybe have a proportion, the larger the building the taller it gets relative to its width so we don't just have huge cubes
+    [] Camera library? Check processing.org
