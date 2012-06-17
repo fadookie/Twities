@@ -105,12 +105,23 @@ void setup() {
     }
 
     //Create buildings
-    for (Avatar avatar : avatars.values()) {
-      Building building = new Building(avatar);
-      //for now, randomize placement
-      building.position.x = random(width);
-      building.position.y = random(height);
-      buildings.put(avatar.user, building);
+    {
+      int columns = 7;
+      int xCounter = 0;
+      int yCounter = 0;
+      float spacer = 60;
+      for (Avatar avatar : avatars.values()) {
+        Building building = new Building(avatar);
+        //For now, arrange in a grid
+        println("x: " + xCounter % columns + " y: " + yCounter);
+        building.position.x = spacer * (xCounter % columns);
+        building.position.y = spacer * yCounter;
+        buildings.put(avatar.user, building);
+        xCounter++;
+        if ((xCounter % columns) == (columns - 1)) {
+          yCounter++;
+        }
+      }
     }
 
     messageString = null;
@@ -180,8 +191,8 @@ void draw() {
   background(0);
 
   for (Building building : buildings.values()) {
-    building.position.x += 0.01 * building.scale;
-    building.position.y += 0.01 * building.scale;
+    //building.position.x += 0.01 * building.scale;
+    //building.position.y += 0.01 * building.scale;
     building.draw();
   }
 

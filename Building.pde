@@ -3,11 +3,13 @@ class Building {
   User user;
   PVector position = new PVector();
   float scale = 1;
+  float minScale = 10;
+  float maxScale = 300;
 
   Building(Avatar avatar) {
     this.avatar = avatar;
     user = avatar.user;
-    scale = user.getFollowersCount();
+    scale = 60;//user.getFollowersCount();
   }
 
   void draw() {
