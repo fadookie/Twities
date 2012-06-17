@@ -1,0 +1,1 @@
+* Share cache for lookup response? Need to compare incoming followed users w/ already looked up users, request just the delta, add it to the array in memory and then save it out. Need a smarter cache manager object?
