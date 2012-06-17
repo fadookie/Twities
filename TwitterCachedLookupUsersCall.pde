@@ -19,14 +19,12 @@ class TwitterCachedLookupUsersCall implements TwitterCachedCall {
 
   Serializable executeCall() {
     ResponseList<User> users = null;
-    //long[][] lookupIdChunks = divideArray(lookupIds, 100);
+
+    long[][] lookupIdChunks = divideArray(lookupIds, 100);
 
     //Debugging - limit this to one API request.
-    long[][] lookupIdChunks = new long[1][];
-    lookupIdChunks[0] = Arrays.copyOfRange(lookupIds, 0, 100);
-
-    println("lookupIdChunks = " + java.util.Arrays.asList(lookupIdChunks));
-    printDelimiter(1);
+    //long[][] lookupIdChunks = new long[1][];
+    //lookupIdChunks[0] = Arrays.copyOfRange(lookupIds, 0, 100);
 
     for (long[] currentIdBatch : lookupIdChunks) {
       try {

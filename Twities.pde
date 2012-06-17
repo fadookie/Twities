@@ -1,5 +1,9 @@
 //Build an ArrayList to hold all of the words that we get from the imported tweets
 ArrayList<String> words = new ArrayList();
+IDs friendIds; 
+ResponseList<User> users;
+
+//---------- Loading Functions ---------------//
 
 void setup() {
   size(550,550);
@@ -23,7 +27,9 @@ void setup() {
   cb.setOAuthAccessToken(credentials[2]);
   cb.setOAuthAccessTokenSecret(credentials[3]);
 
-  int rootUserId = 156560059;//70665746;
+  int eliotId = 156560059;
+  int porpId = 70665746;
+  int rootUserId = porpId;
   
     //Make the twitter object
     Twitter twitter = new TwitterFactory(cb.build()).getInstance();
@@ -49,10 +55,10 @@ void setup() {
 
     //Get following IDs
     TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(twitter, rootUserId, "followingIds.bin");
-    IDs friendIds = (IDs)loadFromCacheOrRequest(friendsIdCall);
+    friendIds = (IDs)loadFromCacheOrRequest(friendsIdCall);
 
     if (friendIds != null) {
-      println("Got Friend IDs: " + friendIds.getIDs().length);
+      println("Got " + friendIds.getIDs().length + " Friend IDs.");
     } else {
       println("Failed to get Friend IDs. :(");
       noLoop();
@@ -61,53 +67,30 @@ void setup() {
 
     //Get user info for following
     long[] followingMaster = friendIds.getIDs();
-    printDelimiter(1);
 
-    TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(twitter, followingMaster /*limited to 100 by test code in object*/, "lookupUsers.bin");
-    ResponseList<User> users = (ResponseList<User>)loadFromCacheOrRequest(lookupCall);
+    TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(twitter, followingMaster, "lookupUsers.bin");
+    users = (ResponseList<User>)loadFromCacheOrRequest(lookupCall);
     if (users != null) {
-      println("Got users!");
+      println("Got " + users.size() + " users!");
     } else {
       println("No users were found.");
       noLoop();
       exit();
     }
 
-
-    /*
-    //Prepare the query
-    Query query = new Query("#20FactsAboutMe");
-    query.setRpp(100); //Set results per page
-  
-    //Try making the query
-    QueryResult result = twitter.search(query);
-    printDelimiter(1);
-    println("GOT RESPONSE:\n\n"+result);
-    printDelimiter();
-    
-    List<Tweet> tweets = result.getTweets();
-    for (int i = 0; i < tweets.size(); i++) {
-      Tweet t = tweets.get(i);
-      String user = t.getFromUser();
-      String msg = t.getText();
-      Date d = t.getCreatedAt();
-      println("Tweet by " + user + " at " + d + ": " + msg);
-      
-      //Break the tweet into words      
-      String[] input = msg.split(" ");
-      for (int j = 0;  j < input.length; j++) {
-       //Put each word into the words ArrayList
-       words.add(input[j]);
-      }
-    }
-    */
-
-  noLoop();
+    noLoop();
 }
 
-Serializable loadFromCacheOrRequest(TwitterCachedCall call) {
+/**
+ * Attempts to load a TwitterCachedCall from a local file on disk, and if the local file doesn't exist, it attempts to perform the call and cache the results in the missing file.
+ *
+ * @return Object|null The object returned from the request. null if there was a failure.
+ */
+Object loadFromCacheOrRequest(TwitterCachedCall call) {
   Serializable responseObject = null;
   String cacheFileName = "data/" + call.getCacheFileName();
+
+  //Try to load the response from the cache
   InputStream fis = createInput(cacheFileName);
   if (fis != null) {
     try {
@@ -122,10 +105,12 @@ Serializable loadFromCacheOrRequest(TwitterCachedCall call) {
   }
 
   if (responseObject == null) {
-    System.out.println("Listing following ids.");
+    //Cache miss, perform the actual API call
+    System.out.println("Executing API call: " + call);
     responseObject = call.executeCall();
 
     if (responseObject != null) {
+      //Cache the response
       OutputStream fos = createOutput(cacheFileName);
       if (fos != null) {
         try {
@@ -146,22 +131,24 @@ Serializable loadFromCacheOrRequest(TwitterCachedCall call) {
   return responseObject;
 }
 
+//---------- Drawing Functions ---------------//
+
 void draw() {
   //Draw a faint black rectangle over what is currently on the stage so it fades over time.
   fill(0,1);
   rect(0,0,width,height);
- 
-  //Draw a word from the list of words that we've built
-  if (words.size() > 0) {
-    int i = (frameCount % words.size());
-    String word = words.get(i);
-   
-    //Put it somewhere random on the stage, with a random size and colour
-    fill(255,random(50,150));
-    textSize(random(10,30));
-    text(word, random(width), random(height));
+
+  if (users != null) {
+    for (User user : users) {
+      //Put it somewhere random on the stage, with a random size and colour
+      fill(255,random(50,150));
+      textSize(random(10,30));
+      text(user.getScreenName(), random(width), random(height));
+    }
   }
 }
+
+//---------- Utility Functions ---------------//
 
 long[][] divideArray(long[] source, int chunksize) {
 
