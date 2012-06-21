@@ -1,3 +1,8 @@
+import peasy.*;
+
+PeasyCam camera;
+PVector cameraLookAt;
+
 //Build an ArrayList to hold all of the words that we get from the imported tweets
 CacheManager cacheManager = new CacheManager();
 long rootUserId = -1;
@@ -6,6 +11,7 @@ ArrayList<User> following = new ArrayList();
 HashMap<Long, User> users;
 HashMap<User, Avatar> avatars = new HashMap();
 TreeSet<Building> buildings = new TreeSet();
+int maxFollowers = 0; //How many followers the most popular user has
 String messageString = null;
 
 //---------- Loading Functions ---------------//
@@ -149,6 +155,7 @@ void setup() {
   }
 
   //Create buildings
+  PVector maxCityBounds = new PVector();
   {
     //Create them
     for (Avatar avatar : avatars.values()) {
@@ -156,16 +163,19 @@ void setup() {
       buildings.add(building); //Will use natural sort order of Comparable<Building>
     }
     //Position buildings
-    Building rowHeadBuilding = null;
     Building previousBuilding = null;
-    float margin = 60;
+    Building rowHeadBuilding = null;
+    float margin = 5;
+    float cityWidth = 500;
     for (Building building : buildings) {
       if (rowHeadBuilding == null) {
+        //This must be the first building in natural sort order
         rowHeadBuilding = building;
+        maxFollowers = building.user.getFollowersCount(); //Careful, this must be set before calling building.getScale()
       }
       if (previousBuilding != null) {
         PVector oldBounds = previousBuilding.getMaxBounds();
-        if (oldBounds.x + margin + building.getScale() <= width) {
+        if (oldBounds.x + margin + building.getScale() <= cityWidth) {
           building.position.x = oldBounds.x + margin;
           building.position.y = previousBuilding.position.y;
           println("oB.x="+oldBounds.x+" margin="+margin+" scale="+building.getScale());
@@ -178,11 +188,23 @@ void setup() {
       }
 
       previousBuilding = building;
+
+      //Set our max bounds for camera centering later
+      PVector buildingBounds = building.getMaxBounds();
+      if (buildingBounds.x > maxCityBounds.x) maxCityBounds.x = buildingBounds.x;
+      if (buildingBounds.y > maxCityBounds.y) maxCityBounds.y = buildingBounds.y;
     }
 
     printDelimiter(1);
     println("prepared buildings.");
   }
+
+  //Set up camera/HUD stuff
+  cameraLookAt = PVector.div(maxCityBounds, 2); //Start looking at the center of the city
+
+  camera = new PeasyCam(this, cameraLookAt.x, cameraLookAt.y, 0 /*lookAt.z*/, 500/*distance*/);
+  camera.setMinimumDistance(0);
+  camera.setMaximumDistance(Integer.MAX_VALUE);
 
   messageString = null;
 }

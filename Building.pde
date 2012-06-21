@@ -3,9 +3,9 @@ class Building implements Comparable<Building> {
   User user;
   PVector position = new PVector();
   float scale = 1;
+  float scaleFactor = 300;
   float minScale = 20;
   float maxScale = 50;
-  float followerCountForMaxScale = 13899;
 
   Building(Avatar avatar) {
     this.avatar = avatar;
@@ -33,7 +33,7 @@ class Building implements Comparable<Building> {
   }
 
   float getScale() {
-    return map(scale, 0, followerCountForMaxScale, minScale, maxScale);
+    return (scale / maxFollowers) * scaleFactor;//map(scale, 0, maxFollowers, minScale, maxScale);
   }
 
   PVector getMaxBounds() {
