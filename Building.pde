@@ -4,7 +4,7 @@ class Building implements Comparable<Building> {
   PVector position = new PVector();
   float scale = 1;
   float minScale = 20;
-  float maxScale = 120;
+  float maxScale = 50;
   float followerCountForMaxScale = 13899;
 
   Building(Avatar avatar) {
@@ -15,12 +15,20 @@ class Building implements Comparable<Building> {
 
   void draw() {
     if (avatar.image != null) {
-      float constrainedScale = map(scale, 0, followerCountForMaxScale, minScale, maxScale);
+      float constrainedScale = getScale();
       pushMatrix();
       translate(position.x, position.y);
       image(avatar.image, 0, 0, constrainedScale, constrainedScale);
       popMatrix();
     }
+  }
+
+  float getScale() {
+    return map(scale, 0, followerCountForMaxScale, minScale, maxScale);
+  }
+
+  PVector getMaxBounds() {
+    return new PVector(position.x + getScale(), position.y + getScale());
   }
 
   int compareTo(Building b) {

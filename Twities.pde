@@ -156,19 +156,28 @@ void setup() {
       buildings.add(building); //Will use natural sort order of Comparable<Building>
     }
     //Position buildings
-    int columns = 7;
-    int xCounter = 0;
-    int yCounter = 0;
-    float spacer = 60;
+    Building rowHeadBuilding = null;
+    Building previousBuilding = null;
+    float margin = 60;
     for (Building building : buildings) {
-      //For now, arrange in a grid
-      //println("x: " + xCounter % columns + " y: " + yCounter);
-      building.position.x = spacer * (xCounter % columns);
-      building.position.y = spacer * yCounter;
-      xCounter++;
-      if ((xCounter % columns) == (columns - 1)) {
-        yCounter++;
+      if (rowHeadBuilding == null) {
+        rowHeadBuilding = building;
       }
+      if (previousBuilding != null) {
+        PVector oldBounds = previousBuilding.getMaxBounds();
+        if (oldBounds.x + margin + building.getScale() <= width) {
+          building.position.x = oldBounds.x + margin;
+          building.position.y = previousBuilding.position.y;
+          println("oB.x="+oldBounds.x+" margin="+margin+" scale="+building.getScale());
+        } else {
+          building.position.x = 0;
+          building.position.y = rowHeadBuilding.getMaxBounds().y + margin;
+          rowHeadBuilding = building;
+          println("reset row");
+        }
+      }
+
+      previousBuilding = building;
     }
 
     printDelimiter(1);
