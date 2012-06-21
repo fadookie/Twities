@@ -18,7 +18,16 @@ class Building implements Comparable<Building> {
       float constrainedScale = getScale();
       pushMatrix();
       translate(position.x, position.y);
-      image(avatar.image, 0, 0, constrainedScale, constrainedScale);
+      beginShape();
+      textureMode(NORMAL);
+      texture(avatar.image);
+      vertex(0, 0, 0, 0);
+      vertex(constrainedScale, 0, 1, 0);
+      vertex(constrainedScale, constrainedScale, 1, 1);
+      vertex(0, constrainedScale, 0, 1);
+      endShape();
+      
+      //image(avatar.image, 0, 0, constrainedScale, constrainedScale);
       popMatrix();
     }
   }
