@@ -2,6 +2,11 @@ import peasy.*;
 
 PeasyCam camera;
 PVector cameraLookAt;
+//Camera debug stuff
+PVector  axisXHud = new PVector();
+PVector  axisYHud = new PVector();
+PVector  axisZHud = new PVector();
+PVector  axisOrgHud = new PVector();
 
 //Build an ArrayList to hold all of the words that we get from the imported tweets
 CacheManager cacheManager = new CacheManager();
@@ -221,9 +226,48 @@ void draw() {
     building.draw();
   }
 
+  calculateAxis(50); //For debug drawing
+
+  //HUD
+  camera.beginHUD();
   if (messageString != null) {
     text(messageString, 0, height - 50);
   }
+  //Debug stuff
+  drawAxis( 2 );
+  camera.endHUD();
+}
+
+void calculateAxis(float length) {
+   // Store the screen positions for the X, Y, Z and origin
+   axisXHud.set( screenX(length,0,0), screenY(length,0,0), 0 );
+   axisYHud.set( screenX(0,length,0), screenY(0,length,0), 0 );     
+   axisZHud.set( screenX(0,0,length), screenY(0,0,length), 0 );
+   axisOrgHud.set( screenX(0,0,0), screenY(0,0,0), 0 );
+}
+
+void drawAxis(float weight) {
+   pushStyle();
+
+     strokeWeight( weight );      // Line width
+
+     stroke( 255,   0,   0 );     // X axis color (Red)
+     line( axisOrgHud.x, axisOrgHud.y, axisXHud.x, axisXHud.y );
+ 
+     stroke(   0, 255,   0 );
+     line( axisOrgHud.x, axisOrgHud.y, axisYHud.x, axisYHud.y );
+
+     stroke(   0,   0, 255 );
+     line( axisOrgHud.x, axisOrgHud.y, axisZHud.x, axisZHud.y );
+
+
+      fill(255);                   // Text color
+
+      text( "X", axisXHud.x, axisXHud.y );
+      text( "Y", axisYHud.x, axisYHud.y );
+      text( "Z", axisZHud.x, axisZHud.y );
+
+   popStyle();
 }
 
 //---------- Utility Functions ---------------//
