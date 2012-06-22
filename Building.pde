@@ -6,6 +6,7 @@ class Building implements Comparable<Building> {
   float scaleFactor = 300;
   float minScale = 20;
   float maxScale = 50;
+  PVector scaleWorkVector = new PVector();
 
   Building(Avatar avatar) {
     this.avatar = avatar;
@@ -14,35 +15,39 @@ class Building implements Comparable<Building> {
   }
 
   void draw() {
-    if (avatar.image != null) {
-      float constrainedScale = getScale();
+    //Cache scale so we don't need to do the calculations multiple times in a single draw call
+    scaleWorkVector.x = getXScale();
+    scaleWorkVector.y = getYScale();
+    scaleWorkVector.z = getZScale();
+
+    pushMatrix();
+      translate(position.x, position.y, position.z);
+
       pushMatrix();
-        translate(position.x, position.y, position.z);
+        //Stupid box() is centered and there's no boxMode() I know of...
+        translate(scaleWorkVector.x / 2, scaleWorkVector.y / 2, scaleWorkVector.z / 2);
+        box(scaleWorkVector.x, scaleWorkVector.y, scaleWorkVector.z);
+      popMatrix();
 
-        pushMatrix();
-          //Stupid box() is centered and there's no boxMode() I know of...
-          translate(getXScale() / 2, getYScale() / 2, getZScale() / 2);
-          box(getXScale(), getYScale(), getZScale());
-        popMatrix();
-
+      if (avatar.image != null) {
         pushMatrix();
           //Draw the avatar on top of the box, for now.
-          translate(0, getYScale() + 0.01, 0);
+          translate(0, scaleWorkVector.y + 0.01, 0);
 
           beginShape();
           textureMode(NORMAL);
           texture(avatar.image);
           vertex(0, 0, 0, 0, 0);
-          vertex(constrainedScale, 0, 0, 1, 0);
-          vertex(constrainedScale, 0, constrainedScale, 1, 1);
-          vertex(0, 0, constrainedScale, 0, 1);
+          vertex(scaleWorkVector.x, 0, 0, 1, 0);
+          vertex(scaleWorkVector.x, 0, scaleWorkVector.z, 1, 1);
+          vertex(0, 0, scaleWorkVector.z, 0, 1);
           endShape();
 
         popMatrix();
-        
-        //image(avatar.image, 0, 0, constrainedScale, constrainedScale);
-      popMatrix();
-    }
+      }
+      
+      //image(avatar.image, 0, 0, constrainedScale, constrainedScale);
+    popMatrix();
   }
 
   float getScale() {
