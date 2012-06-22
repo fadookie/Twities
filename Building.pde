@@ -17,11 +17,11 @@ class Building implements Comparable<Building> {
   void draw() {
     //Cache scale so we don't need to do the calculations multiple times in a single draw call
     scaleWorkVector.x = getXScale();
-    scaleWorkVector.y = getYScale();
+    scaleWorkVector.y = -getYScale();
     scaleWorkVector.z = getZScale();
 
     pushMatrix();
-      translate(position.x, position.y, position.z);
+      translate(position.x, -position.y, position.z);
 
       pushMatrix();
         //Stupid box() is centered and there's no boxMode() I know of...
@@ -32,7 +32,7 @@ class Building implements Comparable<Building> {
       if (avatar.image != null) {
         pushMatrix();
           //Draw the avatar on top of the box, for now.
-          translate(0, scaleWorkVector.y + 0.01, 0);
+          translate(0, scaleWorkVector.y - 0.01, 0);
 
           beginShape();
           textureMode(NORMAL);
