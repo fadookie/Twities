@@ -36,6 +36,7 @@ class Building implements Comparable<Building> {
 
           beginShape();
           textureMode(NORMAL);
+          //textureWrap(REPEAT); //This should work in the next release of processing, currently on 2.0a6. see http://code.google.com/p/processing/issues/detail?id=94
           texture(avatar.image);
           vertex(0, 0, 0, 0, 0);
           vertex(scaleWorkVector.x, 0, 0, 1, 0);
