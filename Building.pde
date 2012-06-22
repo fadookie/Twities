@@ -17,17 +17,30 @@ class Building implements Comparable<Building> {
     if (avatar.image != null) {
       float constrainedScale = getScale();
       pushMatrix();
-      translate(position.x, position.y);
-      beginShape();
-      textureMode(NORMAL);
-      texture(avatar.image);
-      vertex(0, 0, 0, 0);
-      vertex(constrainedScale, 0, 1, 0);
-      vertex(constrainedScale, constrainedScale, 1, 1);
-      vertex(0, constrainedScale, 0, 1);
-      endShape();
-      
-      //image(avatar.image, 0, 0, constrainedScale, constrainedScale);
+        translate(position.x, position.y);
+
+        pushMatrix();
+          //Stupid box() is centered and there's no boxMode() I know of...
+          translate(getScale() / 2, getScale() / 2, getScale() / 2);
+          box(getScale(), getScale(), getScale());
+        popMatrix();
+
+        pushMatrix();
+          //Draw the avatar on top of the box, for now.
+          translate(0, 0, getScale() + 0.01);
+
+          beginShape();
+          textureMode(NORMAL);
+          texture(avatar.image);
+          vertex(0, 0, 0, 0);
+          vertex(constrainedScale, 0, 1, 0);
+          vertex(constrainedScale, constrainedScale, 1, 1);
+          vertex(0, constrainedScale, 0, 1);
+          endShape();
+
+        popMatrix();
+        
+        //image(avatar.image, 0, 0, constrainedScale, constrainedScale);
       popMatrix();
     }
   }
