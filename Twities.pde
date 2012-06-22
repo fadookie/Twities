@@ -175,13 +175,13 @@ void setup() {
       }
       if (previousBuilding != null) {
         PVector oldBounds = previousBuilding.getMaxBounds();
-        if (oldBounds.x + margin + building.getScale() <= cityWidth) {
+        if (oldBounds.x + margin + building.getXScale() <= cityWidth) {
           building.position.x = oldBounds.x + margin;
-          building.position.y = previousBuilding.position.y;
+          building.position.z = previousBuilding.position.z;
           println("oB.x="+oldBounds.x+" margin="+margin+" scale="+building.getScale());
         } else {
           building.position.x = 0;
-          building.position.y = rowHeadBuilding.getMaxBounds().y + margin;
+          building.position.z = rowHeadBuilding.getMaxBounds().z + margin;
           rowHeadBuilding = building;
           println("reset row");
         }
@@ -192,7 +192,7 @@ void setup() {
       //Set our max bounds for camera centering later
       PVector buildingBounds = building.getMaxBounds();
       if (buildingBounds.x > maxCityBounds.x) maxCityBounds.x = buildingBounds.x;
-      if (buildingBounds.y > maxCityBounds.y) maxCityBounds.y = buildingBounds.y;
+      if (buildingBounds.z > maxCityBounds.z) maxCityBounds.z = buildingBounds.z;
     }
 
     printDelimiter(1);
@@ -202,7 +202,7 @@ void setup() {
   //Set up camera/HUD stuff
   cameraLookAt = PVector.div(maxCityBounds, 2); //Start looking at the center of the city
 
-  camera = new PeasyCam(this, cameraLookAt.x, cameraLookAt.y, 0 /*lookAt.z*/, 500/*distance*/);
+  camera = new PeasyCam(this, cameraLookAt.x, 0, cameraLookAt.z, 500/*distance*/);
   camera.setMinimumDistance(0);
   camera.setMaximumDistance(Integer.MAX_VALUE);
 
