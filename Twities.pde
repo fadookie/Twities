@@ -1,5 +1,7 @@
 import peasy.*;
 
+boolean DEBUG = false;
+
 PeasyCam camera;
 PVector cameraLookAt;
 //Camera debug stuff
@@ -208,7 +210,7 @@ void setup() {
   cameraLookAt = PVector.div(maxCityBounds, 2); //Start looking at the center of the city
 
   camera = new PeasyCam(this, cameraLookAt.x, 0, cameraLookAt.z, 500/*distance*/);
-  camera.setMinimumDistance(0);
+  camera.setMinimumDistance(-10);
   camera.setMaximumDistance(Integer.MAX_VALUE);
 
   messageString = null;
@@ -226,15 +228,18 @@ void draw() {
     building.draw();
   }
 
-  calculateAxis(50); //For debug drawing
+  if (DEBUG) {
+    calculateAxis(50); //For debug drawing
+  }
 
   //HUD
   camera.beginHUD();
   if (messageString != null) {
     text(messageString, 0, height - 50);
   }
-  //Debug stuff
-  drawAxis( 2 );
+  if (DEBUG) {
+    drawAxis(2);
+  }
   camera.endHUD();
 }
 

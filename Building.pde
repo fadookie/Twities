@@ -3,9 +3,9 @@ class Building implements Comparable<Building> {
   User user;
   PVector position = new PVector();
   float scale = 1;
-  float scaleFactor = 300;
-  float minScale = 20;
-  float maxScale = 50;
+  float scaleYFactor = 1000;
+  float minXScale = 20;
+  float maxXScale = 100;
   PVector scaleWorkVector = new PVector();
 
   Building(Avatar avatar) {
@@ -55,11 +55,11 @@ class Building implements Comparable<Building> {
   }
 
   float getXScale() {
-    return map(scale, 0, maxFollowers, minScale, maxScale);
+    return map(scale, 0, maxFollowers, minXScale, maxXScale);
   }
 
   float getYScale() {
-    return (scale / maxFollowers) * scaleFactor;
+    return (scale / maxFollowers) * scaleYFactor;
   }
 
   float getZScale() {
