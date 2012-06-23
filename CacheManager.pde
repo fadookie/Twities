@@ -17,7 +17,7 @@
    * @param String groupName Name of group, this is usually the User ID string. Group name "shared" is reserved for shared caches.
    */
    String cachePrefixForFile(String filename, String groupName) {
-    return this.cachePrefix + filename + "/" + groupName + ".bin";
+    return this.cachePrefix + filename + "/" + groupName;
   }
 
   /**
