@@ -20,35 +20,64 @@ class Building implements Comparable<Building> {
     scaleWorkVector.y = -getYScale();
     scaleWorkVector.z = getZScale();
 
+    pushStyle();
     pushMatrix();
       translate(position.x, -position.y, position.z);
 
-      pushMatrix();
-        //Stupid box() is centered and there's no boxMode() I know of...
-        translate(scaleWorkVector.x / 2, scaleWorkVector.y / 2, scaleWorkVector.z / 2);
-        box(scaleWorkVector.x, scaleWorkVector.y, scaleWorkVector.z);
-      popMatrix();
-
-      if (avatar.image != null) {
         pushMatrix();
-          //Draw the avatar on top of the box, for now.
-          translate(0, scaleWorkVector.y - 0.01, 0);
+          ((PGraphicsOpenGL)g).textureWrap(Texture.REPEAT); //Set texture wrap mode to GL_REPEAT. See http://code.google.com/p/processing/issues/detail?id=94
+          beginShape(QUADS);
 
-          beginShape();
-          textureMode(NORMAL);
-          //textureWrap(REPEAT); //This should work in the next release of processing, currently on 2.0a6. see http://code.google.com/p/processing/issues/detail?id=94
-          texture(avatar.image);
+          if (avatar.image != null) {
+              noStroke();
+              textureMode(NORMAL);
+              texture(avatar.image);
+          } else {
+              //Fallback drawing routine if we have no avatar image
+              stroke(0);
+          }
+
+          //TOP
+          vertex(0, scaleWorkVector.y, 0, 0, 0);
+          vertex(scaleWorkVector.x, scaleWorkVector.y, 0, 1, 0);
+          vertex(scaleWorkVector.x, scaleWorkVector.y, scaleWorkVector.z, 1, 1);
+          vertex(0, scaleWorkVector.y, scaleWorkVector.z, 0, 1);
+
+          //BOTTOM
           vertex(0, 0, 0, 0, 0);
           vertex(scaleWorkVector.x, 0, 0, 1, 0);
           vertex(scaleWorkVector.x, 0, scaleWorkVector.z, 1, 1);
           vertex(0, 0, scaleWorkVector.z, 0, 1);
+
+          //BACK
+          vertex(0, 0, 0, 0, 1);
+          vertex(scaleWorkVector.x, 0, 0, 1, 1);
+          vertex(scaleWorkVector.x, scaleWorkVector.y, 0, 1, 0);
+          vertex(0, scaleWorkVector.y, 0, 0, 0);
+
+          //FRONT
+          vertex(0, 0, scaleWorkVector.z, 0, 1);
+          vertex(scaleWorkVector.x, 0, scaleWorkVector.z, 1, 1);
+          vertex(scaleWorkVector.x, scaleWorkVector.y, scaleWorkVector.z, 1, 0);
+          vertex(0, scaleWorkVector.y, scaleWorkVector.z, 0, 0);
+
+          //LEFT
+          vertex(0, 0, 0, 0, 1);
+          vertex(0, 0, scaleWorkVector.z, 1, 1);
+          vertex(0, scaleWorkVector.y, scaleWorkVector.z, 1, 0);
+          vertex(0, scaleWorkVector.y, 0, 0, 0);
+
+          //RIGHT
+          vertex(scaleWorkVector.x, 0, 0, 0, 1);
+          vertex(scaleWorkVector.x, 0, scaleWorkVector.z, 1, 1);
+          vertex(scaleWorkVector.x, scaleWorkVector.y, scaleWorkVector.z, 1, 0);
+          vertex(scaleWorkVector.x, scaleWorkVector.y, 0, 0, 0);
+
           endShape();
 
         popMatrix();
-      }
-      
-      //image(avatar.image, 0, 0, constrainedScale, constrainedScale);
     popMatrix();
+    popStyle();
   }
 
   float getScale() {
