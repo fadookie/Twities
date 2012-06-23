@@ -185,12 +185,12 @@ void setup() {
         if (oldBounds.x + margin + building.getXScale() <= cityWidth) {
           building.position.x = oldBounds.x + margin;
           building.position.z = previousBuilding.position.z;
-          println("oB.x="+oldBounds.x+" margin="+margin+" scale="+building.getScale());
+          //println("oB.x="+oldBounds.x+" margin="+margin+" scale="+building.getScale());
         } else {
           building.position.x = 0;
           building.position.z = rowHeadBuilding.getMaxBounds().z + margin;
           rowHeadBuilding = building;
-          println("reset row");
+          //println("reset row");
         }
       }
 
@@ -203,7 +203,7 @@ void setup() {
     }
 
     printDelimiter(1);
-    println("prepared buildings.");
+    println("prepared " + buildings.size() + " buildings.");
   }
 
   //Set up camera/HUD stuff

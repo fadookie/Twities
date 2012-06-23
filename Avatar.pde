@@ -15,11 +15,11 @@ class Avatar {
       if (image == null) {
         throw new IOException();
       }
-      logLine("Got image from " + user.getProfileImageURL());
+      //logLine("Got image from " + user.getProfileImageURL());
       image.save(cacheLocation);
-      logLine("Saved image to " + cacheLocation);
+      logLine("Saved image from " + user.getProfileImageURL() + " to " + cacheLocation);
     } else {
-      logLine("Got image from cache at " + cacheLocation);
+      //logLine("Got image from cache at " + cacheLocation);
     }
   }
 
