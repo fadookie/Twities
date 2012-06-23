@@ -9,9 +9,21 @@ class Building implements Comparable<Building> {
   float windowScale = 4; //The higher this goes, the less the texture repeats on the bottom and side (i.e. the 'windows' get bigger and fewer)
   PVector scaleWorkVector = new PVector();
 
+  Building(User user) {
+    init(user, null);
+  }
+
   Building(Avatar avatar) {
-    this.avatar = avatar;
-    user = avatar.user;
+    init(avatar.user, avatar);
+  }
+
+  void setAvatar(Avatar avatar) {
+    this.avatar = avatar; //might be null
+  }
+
+  void init(User user, Avatar avatar) {
+    this.user = user;
+    setAvatar(avatar);
     scale = user.getFollowersCount();
   }
 
@@ -28,10 +40,10 @@ class Building implements Comparable<Building> {
     pushMatrix();
       translate(position.x, -position.y, position.z);
 
-      ((PGraphicsOpenGL)g).textureWrap(Texture.REPEAT); //Set texture wrap mode to GL_REPEAT. See http://code.google.com/p/processing/issues/detail?id=94
       beginShape(QUADS);
 
-      if (avatar.image != null) {
+      if ((avatar != null) && (avatar.image != null)) {
+          ((PGraphicsOpenGL)g).textureWrap(Texture.REPEAT); //Set texture wrap mode to GL_REPEAT. See http://code.google.com/p/processing/issues/detail?id=94
           noStroke();
           textureMode(NORMAL);
           texture(avatar.image);

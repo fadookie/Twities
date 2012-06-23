@@ -17,7 +17,7 @@ IDs friendIds;
 ArrayList<User> following = new ArrayList();
 HashMap<Long, User> users;
 HashMap<User, Avatar> avatars = new HashMap();
-TreeSet<Building> buildings = new TreeSet();
+ArrayList<Building> buildings = new ArrayList();
 int maxFollowers = 0; //How many followers the most popular user has
 String messageString = null;
 
@@ -151,6 +151,8 @@ void setup() {
     }
   }
 
+  println("Loaded " + following.size() + " following users.");
+
   //Load avatars
   for (User user : following) {
     try {
@@ -161,14 +163,18 @@ void setup() {
     }
   }
 
+  println("Loaded " + avatars.size() + " avatars.");
+
   //Create buildings
   PVector maxCityBounds = new PVector();
   {
     //Create them
-    for (Avatar avatar : avatars.values()) {
-      Building building = new Building(avatar);
+    for (User user : following) {
+      Building building = new Building(user);
+      building.setAvatar(avatars.get(user)); //This might fail, we will fall back to color rendering
       buildings.add(building); //Will use natural sort order of Comparable<Building>
     }
+    Collections.sort(buildings);
     //Position buildings
     Building previousBuilding = null;
     Building rowHeadBuilding = null;
@@ -203,8 +209,8 @@ void setup() {
     }
 
     printDelimiter(1);
-    println("prepared " + buildings.size() + " buildings.");
   }
+  println("prepared " + buildings.size() + " buildings.");
 
   //Set up camera/HUD stuff
   cameraLookAt = PVector.div(maxCityBounds, 2); //Start looking at the center of the city
