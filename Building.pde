@@ -6,6 +6,7 @@ class Building implements Comparable<Building> {
   float scaleYFactor = 1000;
   float minXScale = 20;
   float maxXScale = 100;
+  float windowScale = 4; //The higher this goes, the less the texture repeats on the bottom and side (i.e. the 'windows' get bigger and fewer)
   PVector scaleWorkVector = new PVector();
 
   Building(Avatar avatar) {
@@ -17,8 +18,11 @@ class Building implements Comparable<Building> {
   void draw() {
     //Cache scale so we don't need to do the calculations multiple times in a single draw call
     scaleWorkVector.x = getXScale();
-    scaleWorkVector.y = -getYScale();
+    scaleWorkVector.y = -getYScale(); //-Y is the height from ground axis to simplify the drawing in OpenGL
     scaleWorkVector.z = getZScale();
+
+    PVector windowTextureScale = PVector.div(scaleWorkVector, windowScale);
+    windowTextureScale.y *= -1; //Invert Y axis since we want the V coordinate to be positive so the texture is right-side-up
 
     pushStyle();
     pushMatrix();
@@ -44,32 +48,32 @@ class Building implements Comparable<Building> {
 
       //BOTTOM
       vertex(0, 0, 0, 0, 0);
-      vertex(scaleWorkVector.x, 0, 0, 1, 0);
-      vertex(scaleWorkVector.x, 0, scaleWorkVector.z, 1, 1);
-      vertex(0, 0, scaleWorkVector.z, 0, 1);
+      vertex(scaleWorkVector.x, 0, 0, windowTextureScale.x, 0);
+      vertex(scaleWorkVector.x, 0, scaleWorkVector.z, windowTextureScale.x, windowTextureScale.z);
+      vertex(0, 0, scaleWorkVector.z, 0, windowTextureScale.z);
 
       //BACK
-      vertex(0, 0, 0, 0, 1);
-      vertex(scaleWorkVector.x, 0, 0, 1, 1);
-      vertex(scaleWorkVector.x, scaleWorkVector.y, 0, 1, 0);
+      vertex(0, 0, 0, 0, windowTextureScale.y);
+      vertex(scaleWorkVector.x, 0, 0, windowTextureScale.x, windowTextureScale.y);
+      vertex(scaleWorkVector.x, scaleWorkVector.y, 0, windowTextureScale.x, 0);
       vertex(0, scaleWorkVector.y, 0, 0, 0);
 
       //FRONT
-      vertex(0, 0, scaleWorkVector.z, 0, 1);
-      vertex(scaleWorkVector.x, 0, scaleWorkVector.z, 1, 1);
-      vertex(scaleWorkVector.x, scaleWorkVector.y, scaleWorkVector.z, 1, 0);
+      vertex(0, 0, scaleWorkVector.z, 0, windowTextureScale.y);
+      vertex(scaleWorkVector.x, 0, scaleWorkVector.z, windowTextureScale.x, windowTextureScale.y);
+      vertex(scaleWorkVector.x, scaleWorkVector.y, scaleWorkVector.z, windowTextureScale.x, 0);
       vertex(0, scaleWorkVector.y, scaleWorkVector.z, 0, 0);
 
       //LEFT
-      vertex(0, 0, 0, 0, 1);
-      vertex(0, 0, scaleWorkVector.z, 1, 1);
-      vertex(0, scaleWorkVector.y, scaleWorkVector.z, 1, 0);
+      vertex(0, 0, 0, 0, windowTextureScale.y);
+      vertex(0, 0, scaleWorkVector.z, windowTextureScale.x, windowTextureScale.y);
+      vertex(0, scaleWorkVector.y, scaleWorkVector.z, windowTextureScale.x, 0);
       vertex(0, scaleWorkVector.y, 0, 0, 0);
 
       //RIGHT
-      vertex(scaleWorkVector.x, 0, 0, 0, 1);
-      vertex(scaleWorkVector.x, 0, scaleWorkVector.z, 1, 1);
-      vertex(scaleWorkVector.x, scaleWorkVector.y, scaleWorkVector.z, 1, 0);
+      vertex(scaleWorkVector.x, 0, 0, 0, windowTextureScale.y);
+      vertex(scaleWorkVector.x, 0, scaleWorkVector.z, windowTextureScale.x, windowTextureScale.y);
+      vertex(scaleWorkVector.x, scaleWorkVector.y, scaleWorkVector.z, windowTextureScale.x, 0);
       vertex(scaleWorkVector.x, scaleWorkVector.y, 0, 0, 0);
 
       endShape();
