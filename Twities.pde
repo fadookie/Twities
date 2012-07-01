@@ -18,6 +18,7 @@ ArrayList<User> following = new ArrayList();
 HashMap<Long, User> users;
 HashMap<User, Avatar> avatars = new HashMap();
 ArrayList<Building> buildings = new ArrayList();
+HashMap<String, Building> buildingsByName = new HashMap();
 int maxFollowers = 0; //How many followers the most popular user has
 String messageString = null;
 
@@ -183,6 +184,7 @@ void setup() {
       Building building = new Building(user);
       building.setAvatar(avatars.get(user)); //This might fail, we will fall back to color rendering
       buildings.add(building); //Will use natural sort order of Comparable<Building>
+      buildingsByName.put(user.getScreenName(), building); //Add building to index by screen name
     }
     Collections.sort(buildings);
     //Position buildings
