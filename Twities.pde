@@ -101,6 +101,10 @@ void setup() {
   {
     followingNotCached.add(id);
   }
+
+  //Add root user to so we can make sure we have their user data cached
+  followingNotCached.add(rootUserId);
+
   followingNotCached.removeAll(users.keySet());
   
   if (followingNotCached.size() > 0) {
@@ -150,6 +154,9 @@ void setup() {
       println("User " + id + " was null.");
     }
   }
+
+  //Add root user so they are on the graph
+  following.add(users.get(rootUserId));
 
   println("Loaded " + following.size() + " following users.");
 
