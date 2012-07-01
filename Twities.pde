@@ -216,8 +216,8 @@ void setup() {
   cameraLookAt = PVector.div(maxCityBounds, 2); //Start looking at the center of the city
 
   camera = new PeasyCam(this, cameraLookAt.x, 0, cameraLookAt.z, 500/*distance*/);
-  camera.setMinimumDistance(-10);
-  camera.setMaximumDistance(Integer.MAX_VALUE);
+  //camera.setMinimumDistance(-10);
+  camera.setMaximumDistance(6500);
 
   messageString = null;
 }
@@ -226,7 +226,7 @@ void setup() {
 //---------- Drawing Functions ---------------//
 
 void draw() {
-  background(0);
+  background(240);
 
   for (Building building : buildings) {
     //building.position.x += 0.01 * building.scale;
