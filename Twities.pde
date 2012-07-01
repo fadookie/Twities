@@ -25,7 +25,10 @@ String messageString = null;
 
 void setup() {
   size(800,800, OPENGL);
-  background(0);
+
+  //Default processing camera perspective, but move the near clip plane in
+  float cameraZ = ((height/2.0) / tan(PI*60.0/360.0));
+  perspective(PI/3.0, width/height, cameraZ/200.0, cameraZ*10.0);
  
   //Set up Twitter API Credentials
   ConfigurationBuilder cb = new ConfigurationBuilder();
