@@ -110,6 +110,14 @@ class Building implements Comparable<Building> {
     return getXScale(); //x and z are currently equal
   }
 
+  PVector getCenterPosition() {
+    return new PVector(
+        position.x + (getXScale() / 2),
+        position.y + (getYScale() / 2),
+        position.z + (getZScale() / 2)
+    );
+  }
+
   PVector getMaxBounds() {
     return new PVector(position.x + getXScale(), position.y + getYScale(), position.z + getZScale());
   }

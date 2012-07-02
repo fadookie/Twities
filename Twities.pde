@@ -1,4 +1,6 @@
 import peasy.*;
+import controlP5.*;
+ControlP5 cp5;
 
 boolean DEBUG = false;
 
@@ -21,6 +23,10 @@ ArrayList<Building> buildings = new ArrayList();
 HashMap<String, Building> buildingsByName = new HashMap();
 int maxFollowers = 0; //How many followers the most popular user has
 String messageString = null;
+boolean searchMode = false;
+String searchUsername = "";
+Textfield searchUsernameTextfield;
+Bang searchUsernameButton;
 
 //---------- Loading Functions ---------------//
 
@@ -30,6 +36,22 @@ void setup() {
   //Default processing camera perspective, but move the near clip plane in
   float cameraZ = ((height/2.0) / tan(PI*60.0/360.0));
   perspective(PI/3.0, width/height, cameraZ/200.0, cameraZ*10.0);
+
+  //Set up GUI
+  cp5 = new ControlP5(this);
+  searchUsernameTextfield = cp5.addTextfield("searchUsername");
+  searchUsernameTextfield.setPosition(20, height - 50)
+     .setSize(200,40)
+     //.setFont(font)
+     .setFocus(true)
+     .setAutoClear(false)
+     ;
+
+  searchUsernameButton = cp5.addBang("search");
+  searchUsernameButton.setPosition(240, height - 50)
+     .setSize(80,40)
+     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+     ;    
  
   //Set up Twitter API Credentials
   ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -184,7 +206,7 @@ void setup() {
       Building building = new Building(user);
       building.setAvatar(avatars.get(user)); //This might fail, we will fall back to color rendering
       buildings.add(building); //Will use natural sort order of Comparable<Building>
-      buildingsByName.put(user.getScreenName(), building); //Add building to index by screen name
+      buildingsByName.put(user.getScreenName().toLowerCase(), building); //Add building to index by screen name
     }
     Collections.sort(buildings);
     //Position buildings
@@ -258,7 +280,12 @@ void draw() {
   if (DEBUG) {
     drawAxis(2);
   }
+
+  //ControlP5 GUI
+  cp5.draw();
+
   camera.endHUD();
+
 }
 
 void calculateAxis(float length) {
@@ -292,6 +319,45 @@ void drawAxis(float weight) {
 
    popStyle();
 }
+
+//---------- Input Handling Functions ---------------//
+void keyPressed() {
+  if (CODED == key) {
+  } else {
+    if ('/' == key) {
+      searchMode = true;
+    }
+  }
+}
+
+public void search() {
+  //Event handler for Search button being pressed
+  searchUsernameTextfield.submit();
+}
+
+public void clear() {
+  searchUsernameTextfield.setColor(color(255));
+  searchUsernameTextfield.clear();
+}
+
+public void searchUsername(String screenName) {
+  // event handler for searchUsername being submitted
+  tryHighlightUser(screenName.trim());
+}
+
+void tryHighlightUser(String screenName) {
+  Building resultBuilding = buildingsByName.get(screenName.toLowerCase());
+  if (null != resultBuilding) {
+    PVector center = resultBuilding.getCenterPosition();
+    camera.lookAt(center.x, center.y, center.z);
+    searchUsernameTextfield.setColor(color(255));
+  } else {
+    searchUsernameTextfield.setText(screenName);
+    searchUsernameTextfield.setColor(color(255, 0, 0));
+  }
+}
+
+
 
 //---------- Utility Functions ---------------//
 
