@@ -269,12 +269,12 @@ void setup() {
           PVector oldDirection = spiralDirection.get();
           spiralDirection.x = -oldDirection.z;
           spiralDirection.z = oldDirection.x;
-          println("rotate to " + spiralDirection);
+          //println("rotate to " + spiralDirection);
         }
 //        println("offset(" + offset + ") * spiralDirection(" + spiralDirection + ") = position("+building.position+")");
       }
 
-      println(building +" margin="+margin);
+      //println(building +" margin="+margin);
 
       previousBuilding = building;
 
@@ -295,10 +295,10 @@ void setup() {
   cityCenter = PVector.add(minCityBounds, maxCityBounds); 
   cityCenter.div(2);
 
-  citySize = PVector.mult(minCityBounds, -1); //Treat minCityBounds as the origin
+  citySize = PVector.mult(minCityBounds, -1); //Treat minCityBounds as the origin, not sure if this math here is correct
   citySize.add(maxCityBounds);
 
-  println("citySize="+citySize+" cityCenter="+cityCenter);
+  //println("citySize="+citySize+" cityCenter="+cityCenter);
 
   //Start looking at the center of the city
   camera = new PeasyCam(this, cityCenter.x, -40, cityCenter.z, 500/*distance*/);
@@ -334,9 +334,8 @@ void draw() {
   popStyle();
   hint(ENABLE_DEPTH_TEST);
 
+  //Draw buildings
   for (Building building : buildings) {
-    //building.position.x += 0.01 * building.scale;
-    //building.position.y += 0.01 * building.scale;
     building.draw();
   }
 
@@ -408,6 +407,9 @@ void keyPressed() {
       if (!searchUsernameTextfield.isActive()) {
         toggleSearchMode();
       }
+    }
+    if ('d' == key) {
+      DEBUG = !DEBUG;
     }
   }
 }
