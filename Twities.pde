@@ -255,11 +255,12 @@ void setup() {
 
         //Rotate spiral direction if neccessary
         PVector buildingBounds = building.getMaxBounds();
+        PVector oldBounds = previousBuilding.getMaxBounds();
         if (
-               building.position.x  < minCityBounds.x
-            || buildingBounds.x     > maxCityBounds.x
-            || building.position.z  < minCityBounds.z
-            || buildingBounds.z     > maxCityBounds.z
+               buildingBounds.x     < minCityBounds.x
+            || building.position.x  > maxCityBounds.x
+            || buildingBounds.z     < minCityBounds.z
+            || building.position.z  > maxCityBounds.z
         ) {
           legHeadBuilding = building;
 
