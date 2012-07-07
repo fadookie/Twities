@@ -217,6 +217,7 @@ void setup() {
 
   //Create buildings
   PVector maxCityBounds = new PVector();
+  PVector minCityBounds = new PVector();
   {
     //Create them
     for (User user : following) {
@@ -232,8 +233,10 @@ void setup() {
     //Position buildings in outward spiral
     Building previousBuilding = null;
     Building legHeadBuilding = null;
+
     PVector spiralDirection = new PVector(1, 0, 0);
-    float margin = 5;
+    PVector margin = new PVector(5, 0, 5);
+
     for (Building building : buildings) {
       if (legHeadBuilding == null) {
         //This must be the first building in natural sort order
@@ -245,14 +248,19 @@ void setup() {
 
         //Biting my lip and creating a ton of garbage for the sake of clarity
         PVector offset = new PVector(previousBuilding.getXScale(), 0, previousBuilding.getZScale());
-        offset.add(new PVector(margin, 0, margin));
-        offset.mult(spiralDirection);
+        offset.add(margin);
+        offset.mult(spiralDirection); //This will cancel movement off the axis of the current spiral leg
 
         building.position.add(offset);
 
-        if ((building.position.x * spiralDirection.x)> maxCityBounds.x
-            || (building.position.z * spiralDirection.z) > maxCityBounds.z) {
-          //If this leg is long enough, rotate spiral direction
+        //Rotate spiral direction if neccessary
+        PVector buildingBounds = building.getMaxBounds();
+        if (
+               building.position.x  < minCityBounds.x
+            || buildingBounds.x     > maxCityBounds.x
+            || building.position.z  < minCityBounds.z
+            || buildingBounds.z     > maxCityBounds.z
+        ) {
           legHeadBuilding = building;
 
           PVector oldDirection = spiralDirection.get();
@@ -271,6 +279,9 @@ void setup() {
       PVector buildingBounds = building.getMaxBounds();
       if (buildingBounds.x > maxCityBounds.x) maxCityBounds.x = buildingBounds.x;
       if (buildingBounds.z > maxCityBounds.z) maxCityBounds.z = buildingBounds.z;
+      //Set our min bounds
+      if (building.position.x < minCityBounds.x) minCityBounds.x = building.position.x;
+      if (building.position.z < minCityBounds.z) minCityBounds.z = building.position.z;
     }
 
     printDelimiter(1);
@@ -278,7 +289,8 @@ void setup() {
   println("prepared " + buildings.size() + " buildings.");
 
   //Set up camera/HUD stuff
-  cameraLookAt = PVector.div(maxCityBounds, 2); //Start looking at the center of the city
+  cameraLookAt = PVector.add(minCityBounds, maxCityBounds); //Start looking at the center of the city
+  cameraLookAt.div(2);
 
   camera = new PeasyCam(this, cameraLookAt.x, -40, cameraLookAt.z, 500/*distance*/);
   //camera.setMinimumDistance(-10);
