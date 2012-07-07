@@ -122,11 +122,16 @@ class Building implements Comparable<Building> {
     return new PVector(position.x + getXScale(), position.y + getYScale(), position.z + getZScale());
   }
 
+  /**
+   * Natural sort order is by follower count, descending
+   */
   int compareTo(Building b) {
     return (b.user.getFollowersCount() - this.user.getFollowersCount());
   }
 
   String toString() {
-    return "Building{user:"+user.getScreenName()+", followersCount:"+user.getFollowersCount()+" scale:"+scale+", position:"+position+"}";
+    //return "Building{"+"user:"+user.getScreenName()+", followersCount:"+user.getFollowersCount()+" scale:"+scale+", position:"+position+"}";
+    return "Building{"+"position:"+position+", user:"+user.getScreenName()+", followersCount:"+user.getFollowersCount()+" scale:"+scale+"}";
+
   }
 }

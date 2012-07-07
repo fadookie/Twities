@@ -225,10 +225,14 @@ void setup() {
       buildings.add(building); //Will use natural sort order of Comparable<Building>
       buildingsByName.put(user.getScreenName().toLowerCase(), building); //Add building to index by screen name
     }
+
+    //Sort list by follower count, descending
     Collections.sort(buildings);
-    //Position buildings
+
+    //Position buildings in outward spiral
     Building previousBuilding = null;
     Building rowHeadBuilding = null;
+    PVector spiralDirection = new PVector(1, 0, 0);
     float margin = 5;
     float cityWidth = 500;
     for (Building building : buildings) {
@@ -239,17 +243,28 @@ void setup() {
       }
       if (previousBuilding != null) {
         PVector oldBounds = previousBuilding.getMaxBounds();
-        if (oldBounds.x + margin + building.getXScale() <= cityWidth) {
-          building.position.x = oldBounds.x + margin;
-          building.position.z = previousBuilding.position.z;
-          //println("oB.x="+oldBounds.x+" margin="+margin+" scale="+building.getScale());
-        } else {
-          building.position.x = 0;
-          building.position.z = rowHeadBuilding.getMaxBounds().z + margin;
+        if (oldBounds.x + margin + building.getXScale() > cityWidth) {
+          cityWidth *= 2; //HACK
           rowHeadBuilding = building;
-          //println("reset row");
+
+          PVector oldDirection = spiralDirection.get();
+          spiralDirection.x = -oldDirection.z;
+          spiralDirection.z = oldDirection.x;
+          println("rotate to " + spiralDirection);
         }
+
+        building.position = PVector.mult(
+            PVector.mult(
+              previousBuilding.position,
+              spiralDirection
+            ),
+            margin
+        );
+        //building.position.x += previousBuilding.getXScale();
+        //building.position.z += previousBuilding.getZScale();
       }
+
+      println(building +" margin="+margin);
 
       previousBuilding = building;
 
