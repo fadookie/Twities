@@ -243,8 +243,10 @@ void setup() {
       }
       if (previousBuilding != null) {
         PVector oldBounds = previousBuilding.getMaxBounds();
-        if (oldBounds.x + margin + building.getXScale() > cityWidth) {
-          cityWidth *= 2; //HACK
+        if ((oldBounds.x + margin + building.getXScale() > cityWidth) ||
+            (oldBounds.z + margin + building.getZScale() > cityWidth)
+        ) {
+          cityWidth *= 2;//HACK
           rowHeadBuilding = building;
 
           PVector oldDirection = spiralDirection.get();
@@ -253,13 +255,14 @@ void setup() {
           println("rotate to " + spiralDirection);
         }
 
-        building.position = PVector.mult(
-            PVector.mult(
-              previousBuilding.position,
-              spiralDirection
-            ),
-            margin
-        );
+        building.position = previousBuilding.position.get();
+
+        PVector offset = new PVector(previousBuilding.getXScale(), 0, previousBuilding.getZScale());
+        offset.add(new PVector(margin, 0, margin));
+        offset.mult(spiralDirection);
+
+        building.position.add(offset);
+//        println("offset(" + offset + ") * spiralDirection(" + spiralDirection + ") = position("+building.position+")");
         //building.position.x += previousBuilding.getXScale();
         //building.position.z += previousBuilding.getZScale();
       }
