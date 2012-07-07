@@ -24,7 +24,7 @@ ArrayList<Building> buildings = new ArrayList(); //Master list of buildings, sor
 HashMap<String, Building> buildingsByName = new HashMap(); //Index of buildings keyed by Twitter username
 int maxFollowers = 0; //How many followers the most popular user has
 String messageString = null;
-boolean searchMode = false;
+boolean searchMode = true;
 String searchUsername = "";
 Textfield searchUsernameTextfield;
 Bang searchUsernameButton;
@@ -335,8 +335,21 @@ void keyPressed() {
   if (CODED == key) {
   } else {
     if ('/' == key) {
-      searchMode = true;
+      toggleSearchMode();
     }
+  }
+}
+
+void toggleSearchMode() {
+  searchMode = !searchMode;
+  if (searchMode) {
+    searchUsernameButton.hide();
+    searchUsernameTextfield.hide();
+  } else {
+    searchUsernameButton.show();
+    searchUsernameTextfield.show();
+    searchUsernameTextfield.clear();
+    searchUsernameTextfield.setFocus(true);
   }
 }
 
@@ -366,6 +379,7 @@ void tryHighlightUser(String screenName) {
     camera.setRotations(radians(90), 0, 0);
     camera.setDistance(170, msCameraTweenTime);
     searchUsernameTextfield.setColor(color(255));
+    searchUsernameTextfield.clear();
   } else {
     searchUsernameTextfield.setText(screenName);
     searchUsernameTextfield.setColor(color(255, 0, 0));
