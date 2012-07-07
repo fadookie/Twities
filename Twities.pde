@@ -5,7 +5,6 @@ ControlP5 cp5;
 boolean DEBUG = false;
 
 PeasyCam camera;
-PVector cameraLookAt;
 long msCameraTweenTime = 1000;
 //Camera debug stuff
 PVector  axisXHud = new PVector();
@@ -22,7 +21,12 @@ HashMap<Long, User> users;
 HashMap<User, Avatar> avatars = new HashMap();
 ArrayList<Building> buildings = new ArrayList(); //Master list of buildings, sortable
 HashMap<String, Building> buildingsByName = new HashMap(); //Index of buildings keyed by Twitter username
-int maxFollowers = 0; //How many followers the most popular user has
+PVector cityCenter;
+PVector citySize;
+PVector maxCityBounds = new PVector();
+PVector minCityBounds = new PVector();
+
+int maxFollowers; //How many followers the most popular user has
 String messageString = null;
 boolean searchMode = true;
 String searchUsername = "";
@@ -216,8 +220,6 @@ void setup() {
   println("Loaded " + avatars.size() + " avatars.");
 
   //Create buildings
-  PVector maxCityBounds = new PVector();
-  PVector minCityBounds = new PVector();
   {
     //Create them
     for (User user : following) {
@@ -290,10 +292,16 @@ void setup() {
   println("prepared " + buildings.size() + " buildings.");
 
   //Set up camera/HUD stuff
-  cameraLookAt = PVector.add(minCityBounds, maxCityBounds); //Start looking at the center of the city
-  cameraLookAt.div(2);
+  cityCenter = PVector.add(minCityBounds, maxCityBounds); 
+  cityCenter.div(2);
 
-  camera = new PeasyCam(this, cameraLookAt.x, -40, cameraLookAt.z, 500/*distance*/);
+  citySize = PVector.mult(minCityBounds, -1); //Treat minCityBounds as the origin
+  citySize.add(maxCityBounds);
+
+  println("citySize="+citySize+" cityCenter="+cityCenter);
+
+  //Start looking at the center of the city
+  camera = new PeasyCam(this, cityCenter.x, -40, cityCenter.z, 500/*distance*/);
   //camera.setMinimumDistance(-10);
   camera.setMaximumDistance(6500);
 
@@ -305,6 +313,24 @@ void setup() {
 
 void draw() {
   background(240);
+
+  //Draw ground
+  pushStyle();
+  //noStroke();
+  fill(0, 255, 0);
+  translate(-minCityBounds.x, -minCityBounds.y, -minCityBounds.z);
+  box(citySize.x, citySize.y, citySize.z);
+
+  /*
+  beginShape(QUADS);
+  vertex(minCityBounds.x, 0, minCityBounds.z);
+  vertex(maxCityBounds.x, 0, minCityBounds.z);
+  vertex(maxCityBounds.x, 0, maxCityBounds.z);
+  vertex(minCityBounds.x, 0, maxCityBounds.z);
+  endShape();
+  */
+
+  popStyle();
 
   for (Building building : buildings) {
     //building.position.x += 0.01 * building.scale;
