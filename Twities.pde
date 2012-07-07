@@ -231,40 +231,36 @@ void setup() {
 
     //Position buildings in outward spiral
     Building previousBuilding = null;
-    Building rowHeadBuilding = null;
+    Building legHeadBuilding = null;
     PVector spiralDirection = new PVector(1, 0, 0);
     float margin = 5;
-    float cityWidth = 500;
     for (Building building : buildings) {
-      if (rowHeadBuilding == null) {
+      if (legHeadBuilding == null) {
         //This must be the first building in natural sort order
-        rowHeadBuilding = building;
+        legHeadBuilding = building;
         maxFollowers = building.user.getFollowersCount(); //Careful, this must be set before calling building.getScale()
       }
       if (previousBuilding != null) {
-        PVector oldBounds = previousBuilding.getMaxBounds();
-        if ((oldBounds.x + margin + building.getXScale() > cityWidth) ||
-            (oldBounds.z + margin + building.getZScale() > cityWidth)
-        ) {
-          cityWidth *= 2;//HACK
-          rowHeadBuilding = building;
+        building.position = previousBuilding.position.get();
+
+        //Biting my lip and creating a ton of garbage for the sake of clarity
+        PVector offset = new PVector(previousBuilding.getXScale(), 0, previousBuilding.getZScale());
+        offset.add(new PVector(margin, 0, margin));
+        offset.mult(spiralDirection);
+
+        building.position.add(offset);
+
+        if ((building.position.x * spiralDirection.x)> maxCityBounds.x
+            || (building.position.z * spiralDirection.z) > maxCityBounds.z) {
+          //If this leg is long enough, rotate spiral direction
+          legHeadBuilding = building;
 
           PVector oldDirection = spiralDirection.get();
           spiralDirection.x = -oldDirection.z;
           spiralDirection.z = oldDirection.x;
           println("rotate to " + spiralDirection);
         }
-
-        building.position = previousBuilding.position.get();
-
-        PVector offset = new PVector(previousBuilding.getXScale(), 0, previousBuilding.getZScale());
-        offset.add(new PVector(margin, 0, margin));
-        offset.mult(spiralDirection);
-
-        building.position.add(offset);
 //        println("offset(" + offset + ") * spiralDirection(" + spiralDirection + ") = position("+building.position+")");
-        //building.position.x += previousBuilding.getXScale();
-        //building.position.z += previousBuilding.getZScale();
       }
 
       println(building +" margin="+margin);
