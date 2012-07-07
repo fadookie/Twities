@@ -40,9 +40,9 @@ Bang searchUsernameButton;
 void setup() {
   size(800,800, OPENGL);
 
-  //Default processing camera perspective, but move the near clip plane in
+  //Default processing camera perspective, but move the near clip plane in and far clip plane out
   float cameraZ = ((height/2.0) / tan(PI*60.0/360.0));
-  perspective(PI/3.0, width/height, cameraZ/200.0, cameraZ*10.0);
+  perspective(PI/3.0, width/height, cameraZ/200.0, cameraZ*20.0);
 
   //Set up GUI
   cp5 = new ControlP5(this);
@@ -315,11 +315,12 @@ void draw() {
   background(240);
 
   //Draw ground
+  hint(DISABLE_DEPTH_TEST); //Was getting some weird interlacing stuff, so i'm now drawing the ground in it's own depth buffer underneath the buildings at all times
   pushStyle();
-  //noStroke();
-  fill(0, 255, 0);
-  translate(-minCityBounds.x, -minCityBounds.y, -minCityBounds.z);
-  box(citySize.x, citySize.y, citySize.z);
+  noStroke();
+  fill(0);
+  //Just make the ground plane really large
+  box(citySize.x * 1000, 0, citySize.z * 1000);
 
   /*
   beginShape(QUADS);
@@ -331,6 +332,7 @@ void draw() {
   */
 
   popStyle();
+  hint(ENABLE_DEPTH_TEST);
 
   for (Building building : buildings) {
     //building.position.x += 0.01 * building.scale;
