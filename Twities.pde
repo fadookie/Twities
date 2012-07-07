@@ -274,6 +274,8 @@ void draw() {
 
   //HUD
   camera.beginHUD();
+  //Clear depth buffer so the HUD is guaranteed to be on top
+  hint(DISABLE_DEPTH_TEST); 
   if (messageString != null) {
     text(messageString, 0, height - 50);
   }
@@ -284,6 +286,7 @@ void draw() {
   //ControlP5 GUI
   cp5.draw();
 
+  hint(ENABLE_DEPTH_TEST);
   camera.endHUD();
 
 }
@@ -321,6 +324,7 @@ void drawAxis(float weight) {
 }
 
 //---------- Input Handling Functions ---------------//
+
 void keyPressed() {
   if (CODED == key) {
   } else {
@@ -329,6 +333,8 @@ void keyPressed() {
     }
   }
 }
+
+//---------- ControlP5 GUI Event Handlers ---------------//
 
 public void search() {
   //Event handler for Search button being pressed
