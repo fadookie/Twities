@@ -6,6 +6,7 @@ boolean DEBUG = false;
 
 PeasyCam camera;
 PVector cameraLookAt;
+long msCameraTweenTime = 1000;
 //Camera debug stuff
 PVector  axisXHud = new PVector();
 PVector  axisYHud = new PVector();
@@ -19,8 +20,8 @@ IDs friendIds;
 ArrayList<User> following = new ArrayList();
 HashMap<Long, User> users;
 HashMap<User, Avatar> avatars = new HashMap();
-ArrayList<Building> buildings = new ArrayList();
-HashMap<String, Building> buildingsByName = new HashMap();
+ArrayList<Building> buildings = new ArrayList(); //Master list of buildings, sortable
+HashMap<String, Building> buildingsByName = new HashMap(); //Index of buildings keyed by Twitter username
 int maxFollowers = 0; //How many followers the most popular user has
 String messageString = null;
 boolean searchMode = false;
@@ -43,6 +44,7 @@ void setup() {
   searchUsernameTextfield.setPosition(20, height - 50)
      .setSize(200,40)
      //.setFont(font)
+     .setCaptionLabel("")
      .setFocus(true)
      .setAutoClear(false)
      ;
@@ -249,7 +251,7 @@ void setup() {
   //Set up camera/HUD stuff
   cameraLookAt = PVector.div(maxCityBounds, 2); //Start looking at the center of the city
 
-  camera = new PeasyCam(this, cameraLookAt.x, 0, cameraLookAt.z, 500/*distance*/);
+  camera = new PeasyCam(this, cameraLookAt.x, -40, cameraLookAt.z, 500/*distance*/);
   //camera.setMinimumDistance(-10);
   camera.setMaximumDistance(6500);
 
@@ -289,6 +291,10 @@ void draw() {
   hint(ENABLE_DEPTH_TEST);
   camera.endHUD();
 
+  //float[] position = camera.getPosition();
+  //float[] rotations = camera.getRotations();
+  //println(position);
+  //println("rotX: " + degrees(rotations[0]) + ", rotY: " +degrees(rotations[1])+ ", rotZ: " +degrees(rotations[2]) + ", dist: " + camera.getDistance());
 }
 
 void calculateAxis(float length) {
@@ -355,7 +361,10 @@ void tryHighlightUser(String screenName) {
   Building resultBuilding = buildingsByName.get(screenName.toLowerCase());
   if (null != resultBuilding) {
     PVector center = resultBuilding.getCenterPosition();
-    camera.lookAt(center.x, center.y, center.z);
+    //The center is the actual center of the building, we want to center our camera on the top of the building so we use the Y scale. Remember to flip the sign since "up" in this city is the -Y axis
+    camera.lookAt(center.x, -resultBuilding.getYScale(), center.z, msCameraTweenTime);
+    camera.setRotations(radians(90), 0, 0);
+    camera.setDistance(170, msCameraTweenTime);
     searchUsernameTextfield.setColor(color(255));
   } else {
     searchUsernameTextfield.setText(screenName);
