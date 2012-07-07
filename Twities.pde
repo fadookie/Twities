@@ -26,8 +26,10 @@ int maxFollowers = 0; //How many followers the most popular user has
 String messageString = null;
 boolean searchMode = true;
 String searchUsername = "";
+Group searchGroup;
 Textfield searchUsernameTextfield;
 Bang searchUsernameButton;
+//Bang searchHideButton;
 
 //---------- Loading Functions ---------------//
 
@@ -40,9 +42,12 @@ void setup() {
 
   //Set up GUI
   cp5 = new ControlP5(this);
+  searchGroup = cp5.addGroup("g1");
+
   searchUsernameTextfield = cp5.addTextfield("searchUsername");
   searchUsernameTextfield.setPosition(20, height - 50)
      .setSize(200,40)
+     .setGroup(searchGroup)
      //.setFont(font)
      .setCaptionLabel("")
      .setFocus(true)
@@ -52,8 +57,18 @@ void setup() {
   searchUsernameButton = cp5.addBang("search");
   searchUsernameButton.setPosition(240, height - 50)
      .setSize(80,40)
+     .setGroup(searchGroup)
      .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
      ;    
+
+  /*
+  searchHideButton = cp5.addBang("x");
+  searchHideButton.setPosition(340, height - 50)
+     .setSize(40,40)
+     .setGroup(searchGroup)
+     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+     ;    
+ */
  
   //Set up Twitter API Credentials
   ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -335,7 +350,9 @@ void keyPressed() {
   if (CODED == key) {
   } else {
     if ('/' == key) {
-      toggleSearchMode();
+      if (!searchUsernameTextfield.isActive()) {
+        toggleSearchMode();
+      }
     }
   }
 }
@@ -343,12 +360,10 @@ void keyPressed() {
 void toggleSearchMode() {
   searchMode = !searchMode;
   if (searchMode) {
-    searchUsernameButton.hide();
-    searchUsernameTextfield.hide();
+    searchGroup.hide();
+    this.clear();
   } else {
-    searchUsernameButton.show();
-    searchUsernameTextfield.show();
-    searchUsernameTextfield.clear();
+    searchGroup.show();
     searchUsernameTextfield.setFocus(true);
   }
 }
@@ -359,6 +374,12 @@ public void search() {
   //Event handler for Search button being pressed
   searchUsernameTextfield.submit();
 }
+
+/*
+public void x() {
+  toggleSearchMode();
+}
+*/
 
 public void clear() {
   searchUsernameTextfield.setColor(color(255));
