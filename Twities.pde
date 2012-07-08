@@ -317,20 +317,21 @@ void draw() {
   //Draw ground
   hint(DISABLE_DEPTH_TEST); //Was getting some weird interlacing stuff, so i'm now drawing the ground in it's own depth buffer underneath the buildings at all times
   pushStyle();
+  pushMatrix();
   noStroke();
   fill(0);
-  //Just make the ground plane really large
-  box(citySize.x * 1000, 0, citySize.z * 1000);
 
-  /*
+  //Just make the ground plane really large
+  scale(1000, 0, 1000);
+
   beginShape(QUADS);
   vertex(minCityBounds.x, 0, minCityBounds.z);
   vertex(maxCityBounds.x, 0, minCityBounds.z);
   vertex(maxCityBounds.x, 0, maxCityBounds.z);
   vertex(minCityBounds.x, 0, maxCityBounds.z);
   endShape();
-  */
 
+  popMatrix();
   popStyle();
   hint(ENABLE_DEPTH_TEST);
 
