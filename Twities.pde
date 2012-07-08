@@ -1,3 +1,5 @@
+import processing.opengl.*;
+import javax.media.opengl.*;
 import peasy.*;
 import controlP5.*;
 ControlP5 cp5;
@@ -25,6 +27,8 @@ PVector cityCenter;
 PVector citySize;
 PVector maxCityBounds = new PVector();
 PVector minCityBounds = new PVector();
+
+PImage grassImage;
 
 int maxFollowers; //How many followers the most popular user has
 String messageString = null;
@@ -306,12 +310,26 @@ void setup() {
   camera.setMaximumDistance(6500);
 
   messageString = null;
+  
+  //Load additional assets
+
+  // Creating texture with linear filtering and the 
+  // size of the image that will be loaded into it:
+  grassImage = loadImage("grass1.png");
+  //Texture.Parameters params = new Texture.Parameters();
+  //params.sampling = Texture.LINEAR;
+  //grassTexture = new Texture(this, 83, 83, params);
+
+  //// Loading image.
+  //grassTexture.set(grassImage);
 }
 
 
 //---------- Drawing Functions ---------------//
 
 void draw() {
+  PGraphicsOpenGL pgl = (PGraphicsOpenGL)g;
+
   background(240);
 
   //Draw ground
@@ -325,15 +343,22 @@ void draw() {
   scale(1000, 0, 1000);
 
   beginShape(QUADS);
-  vertex(minCityBounds.x, 0, minCityBounds.z);
-  vertex(maxCityBounds.x, 0, minCityBounds.z);
-  vertex(maxCityBounds.x, 0, maxCityBounds.z);
-  vertex(minCityBounds.x, 0, maxCityBounds.z);
+  pgl.textureSampling(Texture.LINEAR);
+  pgl.textureWrap(Texture.REPEAT); //Set texture wrap mode to GL_REPEAT. See http://code.google.com/p/processing/issues/detail?id=94
+  textureMode(NORMAL);
+  texture(grassImage);
+  float textureScale = 10000;
+  vertex(minCityBounds.x, 0, minCityBounds.z, 0, 0);
+  vertex(maxCityBounds.x, 0, minCityBounds.z, textureScale, 0);
+  vertex(maxCityBounds.x, 0, maxCityBounds.z, textureScale, textureScale);
+  vertex(minCityBounds.x, 0, maxCityBounds.z, 0, textureScale);
   endShape();
 
   popMatrix();
   popStyle();
   hint(ENABLE_DEPTH_TEST);
+
+  pgl.textureSampling(Texture.BILINEAR);
 
   //Draw buildings
   for (Building building : buildings) {
