@@ -5,6 +5,7 @@ import controlP5.*;
 ControlP5 cp5;
 
 boolean DEBUG = false;
+boolean saveNextFrame = false;
 
 PeasyCam camera;
 long msCameraTweenTime = 1000;
@@ -58,7 +59,7 @@ void setup() {
      .setGroup(searchGroup)
      //.setFont(font)
      .setCaptionLabel("")
-     .setFocus(true)
+     //.setFocus(true)
      .setAutoClear(false)
      ;
 
@@ -330,7 +331,7 @@ void setup() {
 void draw() {
   PGraphicsOpenGL pgl = (PGraphicsOpenGL)g;
 
-  background(240);
+  background(color(112, 252, 255));
 
   //Draw ground
   hint(DISABLE_DEPTH_TEST); //Was getting some weird interlacing stuff, so i'm now drawing the ground in it's own depth buffer underneath the buildings at all times
@@ -390,6 +391,13 @@ void draw() {
   //float[] rotations = camera.getRotations();
   //println(position);
   //println("rotX: " + degrees(rotations[0]) + ", rotY: " +degrees(rotations[1])+ ", rotZ: " +degrees(rotations[2]) + ", dist: " + camera.getDistance());
+  //
+
+  if (saveNextFrame) {
+    saveNextFrame = false;
+    //Note, this doesn't seem to work with Processing 0206
+    saveFrame("screenshot-###.png"); 
+  }
 }
 
 void calculateAxis(float length) {
@@ -427,15 +435,16 @@ void drawAxis(float weight) {
 //---------- Input Handling Functions ---------------//
 
 void keyPressed() {
-  if (CODED == key) {
-  } else {
-    if ('/' == key) {
-      if (!searchUsernameTextfield.isActive()) {
-        toggleSearchMode();
+  if (!searchUsernameTextfield.isActive()) {
+    if (CODED == key) {
+    } else {
+      if ('/' == key) {
+          toggleSearchMode();
+      } else if ('d' == key) {
+        DEBUG = !DEBUG;
+      } else if ('s' == key) {
+        saveNextFrame = true;
       }
-    }
-    if ('d' == key) {
-      DEBUG = !DEBUG;
     }
   }
 }
