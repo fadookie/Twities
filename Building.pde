@@ -59,10 +59,13 @@ class Building implements Comparable<Building> {
       vertex(0, scaleWorkVector.y, scaleWorkVector.z, 0, 1);
 
       //BOTTOM
-      vertex(0, 0, 0, 0, 0);
-      vertex(scaleWorkVector.x, 0, 0, windowTextureScale.x, 0);
-      vertex(scaleWorkVector.x, 0, scaleWorkVector.z, windowTextureScale.x, windowTextureScale.z);
-      vertex(0, 0, scaleWorkVector.z, 0, windowTextureScale.z);
+      if(scaleWorkVector.y < -0.05) {
+        //Only draw bottom if building is not super short as it was causing z-fighting
+        vertex(0, 0, 0, 0, 0);
+        vertex(scaleWorkVector.x, 0, 0, windowTextureScale.x, 0);
+        vertex(scaleWorkVector.x, 0, scaleWorkVector.z, windowTextureScale.x, windowTextureScale.z);
+        vertex(0, 0, scaleWorkVector.z, 0, windowTextureScale.z);
+      }
 
       //BACK
       vertex(0, 0, 0, 0, windowTextureScale.y);

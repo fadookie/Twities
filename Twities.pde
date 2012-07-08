@@ -29,7 +29,9 @@ PVector citySize;
 PVector maxCityBounds = new PVector();
 PVector minCityBounds = new PVector();
 
-PImage grassImage;
+PImage roadImage;
+PImage[] grassImages;
+int currentGrassImage = 0;
 
 int maxFollowers; //How many followers the most popular user has
 String messageString = null;
@@ -314,15 +316,12 @@ void setup() {
   
   //Load additional assets
 
-  // Creating texture with linear filtering and the 
-  // size of the image that will be loaded into it:
-  grassImage = loadImage("grass1.png");
-  //Texture.Parameters params = new Texture.Parameters();
-  //params.sampling = Texture.LINEAR;
-  //grassTexture = new Texture(this, 83, 83, params);
-
-  //// Loading image.
-  //grassTexture.set(grassImage);
+  //grassImage = loadImage("grass"+round(random(1, 4))+".png");
+  grassImages = new PImage[4];
+  for (int i = 0; i < grassImages.length; i++) {
+    grassImages[i] = loadImage("grass"+(i+1)+".png");
+  }
+  roadImage  = loadImage("road.png");
 }
 
 
@@ -336,9 +335,10 @@ void draw() {
   //Draw ground
   hint(DISABLE_DEPTH_TEST); //Was getting some weird interlacing stuff, so i'm now drawing the ground in it's own depth buffer underneath the buildings at all times
   pushStyle();
-  pushMatrix();
   noStroke();
   fill(0);
+
+  pushMatrix();
 
   //Just make the ground plane really large
   scale(1000, 0, 1000);
@@ -347,8 +347,8 @@ void draw() {
   pgl.textureSampling(Texture.LINEAR);
   pgl.textureWrap(Texture.REPEAT); //Set texture wrap mode to GL_REPEAT. See http://code.google.com/p/processing/issues/detail?id=94
   textureMode(NORMAL);
-  texture(grassImage);
-  float textureScale = 10000;
+  texture(grassImages[currentGrassImage]);
+  float textureScale = 90000;
   vertex(minCityBounds.x, 0, minCityBounds.z, 0, 0);
   vertex(maxCityBounds.x, 0, minCityBounds.z, textureScale, 0);
   vertex(maxCityBounds.x, 0, maxCityBounds.z, textureScale, textureScale);
@@ -356,6 +356,18 @@ void draw() {
   endShape();
 
   popMatrix();
+
+  //Draw roads
+  /*
+  beginShape(QUADS);
+  texture(roadImage);
+  vertex(minCityBounds.x, 0, minCityBounds.z, 0, 0);
+  vertex(1, 0, minCityBounds.z, 1, 0);
+  vertex(1, 0, maxCityBounds.z, 1, 1);
+  vertex(minCityBounds.x, 0, maxCityBounds.z, 0, 1);
+  endShape();
+  */
+
   popStyle();
   hint(ENABLE_DEPTH_TEST);
 
@@ -438,12 +450,23 @@ void keyPressed() {
   if (!searchUsernameTextfield.isActive()) {
     if (CODED == key) {
     } else {
-      if ('/' == key) {
+      switch(key) {
+        case '/':
           toggleSearchMode();
-      } else if ('d' == key) {
-        DEBUG = !DEBUG;
-      } else if ('s' == key) {
-        saveNextFrame = true;
+          break;
+        case 'd':
+          DEBUG = !DEBUG;
+          break;
+        case 's':
+          saveNextFrame = true;
+          break;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+          //Switch grass texture to texture 1-4 (stored in array items 0-3)
+          currentGrassImage = Integer.parseInt(Character.toString(key)) - 1;
+          break;
       }
     }
   }
