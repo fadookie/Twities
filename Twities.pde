@@ -34,6 +34,11 @@ PImage roadImage;
 PImage[] grassImages;
 int currentGrassImage = 0;
 
+static final int TEX_DIRECTION_BACK = 1;
+static final int TEX_DIRECTION_RIGHT = 2;
+static final int TEX_DIRECTION_FORWARD = 3;
+static final int TEX_DIRECTION_LEFT = 4;
+
 int maxFollowers; //How many followers the most popular user has
 String messageString = null;
 boolean searchMode = true;
@@ -325,9 +330,11 @@ void setup() {
   roadImage  = loadImage("road.png");
 
   {
-    Quads roadTest = new Quads(roadImage);
-    roadTest.addQuad(1, 10, minCityBounds, new PVector(100, 0, 2000));
-    roadTest.addQuad(1, 10, maxCityBounds, new PVector(100, 0, 2000));
+    Quads roadTest = new Quads(grassImages[3]);
+    roadTest.addQuad(TEX_DIRECTION_BACK, 0, 0, 1, 10, minCityBounds, new PVector(100, 0, 2000));
+    roadTest.addQuad(TEX_DIRECTION_FORWARD, 0, 0, 1, 10, maxCityBounds, new PVector(100, 0, 2000));
+    roadTest.addQuad(TEX_DIRECTION_LEFT, 0, 0, 1, 10, maxCityBounds, new PVector(2000, 0, 100));
+    roadTest.addQuad(TEX_DIRECTION_RIGHT, 0, 0, 1, 10, new PVector(1500, 0, 1500), new PVector(2000, 0, 100));
     levelGeometry.add(roadTest);
   }
 }
@@ -387,11 +394,9 @@ void draw() {
   pgl.textureSampling(Texture.BILINEAR);
 
   //Draw buildings
-  /*
   for (Building building : buildings) {
     building.draw();
   }
-  */
 
   if (DEBUG) {
     calculateAxis(50); //For debug drawing
