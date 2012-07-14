@@ -1,0 +1,3 @@
+interface Polygons {
+  void draw();
+}

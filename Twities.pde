@@ -29,6 +29,7 @@ PVector citySize;
 PVector maxCityBounds = new PVector();
 PVector minCityBounds = new PVector();
 
+ArrayList<Polygons> levelGeometry = new ArrayList();
 PImage roadImage;
 PImage[] grassImages;
 int currentGrassImage = 0;
@@ -322,6 +323,13 @@ void setup() {
     grassImages[i] = loadImage("grass"+(i+1)+".png");
   }
   roadImage  = loadImage("road.png");
+
+  {
+    Quads roadTest = new Quads(roadImage);
+    roadTest.addQuad(1, 10, minCityBounds, new PVector(100, 0, 2000));
+    roadTest.addQuad(1, 10, maxCityBounds, new PVector(100, 0, 2000));
+    levelGeometry.add(roadTest);
+  }
 }
 
 
@@ -368,15 +376,22 @@ void draw() {
   endShape();
   */
 
+  //Draw "level geometry"
+  for (Polygons p : levelGeometry) {
+    p.draw();
+  }
+
   popStyle();
   hint(ENABLE_DEPTH_TEST);
 
   pgl.textureSampling(Texture.BILINEAR);
 
   //Draw buildings
+  /*
   for (Building building : buildings) {
     building.draw();
   }
+  */
 
   if (DEBUG) {
     calculateAxis(50); //For debug drawing
