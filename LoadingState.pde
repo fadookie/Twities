@@ -4,9 +4,11 @@
  */
 class LoadingState implements GameState {
   Twitter twitter;
+  User authenticatedUser = null; //nullable
 
-  LoadingState(Twitter t) {
+  LoadingState(Twitter t, User a) {
     twitter = t;
+    authenticatedUser = a;
   }
 
   void setup() {
@@ -14,18 +16,26 @@ class LoadingState implements GameState {
     String userFileName = "rootUser.txt";
     String rootUserName[] = loadStrings(userFileName);
     if ((null == rootUserName) || (rootUserName.length < 1)) {
-      fatalError("Invalid root user config file at " + userFileName);
-      return;
+      println("No root user ID at " + userFileName + ", defaulting to currently authenticated user.");
+    } else {
+      try {
+        rootUserId = Long.parseLong(rootUserName[0]);
+      } catch (NumberFormatException nfe) {
+        println("Invalid user ID number: " + rootUserName[0] + " exception: " + nfe);
+      }
+
+      logLine("READ USER CONFIG file " + userFileName + ", proceeding with root User ID " + rootUserId + "\n\n");
     }
 
-    try {
-      rootUserId = Long.parseLong(rootUserName[0]);
-    } catch (NumberFormatException nfe) {
-      fatalError("Invalid user ID number: " + rootUserName[0] + " exception: " + nfe);
-      return;
+    if(rootUserId < 0) {
+      //Default to currently authenticated user if possible
+      if (null != authenticatedUser) {
+        rootUserId = authenticatedUser.getId();
+      } else {
+        fatalError("No config for root user found at " + userFileName + " and no user is currently authenticated.");
+        return;
+      }
     }
-
-    logLine("READ USER CONFIG file " + userFileName + ", proceeding with root User ID " + rootUserId + "\n\n");
 
     printDelimiter(1);
 

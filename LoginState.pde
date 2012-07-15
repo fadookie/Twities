@@ -4,6 +4,7 @@
  */
 class LoginState implements GameState {
   Twitter twitter;
+  User authenticatedUser = null;
   RequestToken requestToken;
   String propFilename = "twitter4j.properties";
   String accessTokenPropName = "oauth.accessToken";
@@ -55,31 +56,27 @@ class LoginState implements GameState {
     //First, try to retrieve stored OAuth token
     InputStream is = createInput(propFilename);
     boolean requestNewToken = true;
-    try {
-      prop.load(is);
-      String accessTokenString = prop.getProperty(accessTokenPropName);
-      String accessTokenSecretString = prop.getProperty(accessSecretPropName);
-      if (null != accessTokenString && null != accessTokenSecretString ) {
-        requestNewToken = false;
-        println("found old token");
-        cb.setOAuthAccessToken(accessTokenString);
-        cb.setOAuthAccessTokenSecret(accessTokenSecretString);
+    if (is != null) {
+      try {
+        prop.load(is);
+        String accessTokenString = prop.getProperty(accessTokenPropName);
+        String accessTokenSecretString = prop.getProperty(accessSecretPropName);
+        if (null != accessTokenString && null != accessTokenSecretString ) {
+          requestNewToken = false;
+          println("found old token");
+          cb.setOAuthAccessToken(accessTokenString);
+          cb.setOAuthAccessTokenSecret(accessTokenSecretString);
+        }
+      } catch (IOException ioe) {
+        println("IOException reading file " + propFilename + " : " + ioe);
       }
-    } catch (IOException ioe) {
-      println("IOException reading file " + propFilename + " : " + ioe);
     }
 
     //Make the twitter object
     twitter = new TwitterFactory(cb.build()).getInstance();
 
     //Validate stored token
-    try {
-      twitter.verifyCredentials();
-    } catch (Exception e) {
-      println("Verify credentials failed : " +  e);
-      twitter.setOAuthAccessToken(null);
-      requestNewToken = true;
-    }
+    requestNewToken = !isUserValid();
     println((requestNewToken ? "invalid" : "valid") + " credentials");
 
     //Obtain new OAuth access token for user if needed
@@ -125,8 +122,20 @@ class LoginState implements GameState {
     }
   }
 
+  boolean isUserValid() {
+    boolean valid = false;
+    try {
+      authenticatedUser = twitter.verifyCredentials();
+      valid = true;
+    } catch (Exception e) {
+      println("Verify credentials failed : " +  e);
+      twitter.setOAuthAccessToken(null);
+    }
+    return valid;
+  }
+
   void goToLoadState() {
-      engineChangeState(new LoadingState(twitter));
+      engineChangeState(new LoadingState(twitter, authenticatedUser));
   }
 
   void loginWithPin(String pin) {
@@ -175,6 +184,7 @@ class LoginState implements GameState {
 
     if (accessToken != null) {
       //Success!
+      isUserValid(); //Update authenticatedUser
       goToLoadState();
     }
   }
