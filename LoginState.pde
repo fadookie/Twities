@@ -93,15 +93,21 @@ class LoginState implements GameState {
         println("Request token: " + requestToken.getToken());
         println("Request token secret: " + requestToken.getTokenSecret());
 
-        println("Open the following URL and grant access to your account:");
-        println(requestToken.getAuthorizationURL());
+        //println("Open the following URL and grant access to your account:");
+        //println(requestToken.getAuthorizationURL());
         link(requestToken.getAuthorizationURL());
-        print("Enter the PIN(if available) and hit enter after you granted access.[PIN]:");
 
       } catch (TwitterException te) {
-        logLine("Twitter Exception: " + te);
-        noLoop();
-        exit();
+        if (te.isCausedByNetworkIssue()) {
+          //Skip authorization in case we have the data cached already
+          println("Encountered network issue, proceeding anyway.");
+          goToLoadState();
+        } else {
+          //Not sure how to handle this
+          logLine("Twitter Exception: " + te);
+          noLoop();
+          exit();
+        }
       }
 
       //Set up GUI
