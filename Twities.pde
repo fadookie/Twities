@@ -232,6 +232,14 @@ PApplet getMainInstance() {
 //---------- Utility Functions ---------------//
 
 /**
+ * Helper to invoke FatalErrorState for displaying a final message to the user and a quit button.
+ * You should immediately break from whatever you are doing after calling this - return;
+ */
+void fatalError(String error) {
+  engineResetToState(new FatalErrorState(error));
+}
+
+/**
  * @return String|null String from clipboard or null on failure
  */
 String getClipboardString() {

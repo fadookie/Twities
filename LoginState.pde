@@ -43,9 +43,8 @@ class LoginState implements GameState {
     }
 
     if ((null == credentialsDecrypted) || (credentialsDecrypted.length < 4)) {
-      logLine("Invalid config at " + configFileName);
-      noLoop();
-      exit();
+      fatalError("Invalid config at " + configFileName);
+      return;
     }
 
     //logLine("READ CREDENTIALS file " + configFileName + ":\n\n" + java.util.Arrays.asList(credentials));
@@ -105,8 +104,8 @@ class LoginState implements GameState {
         } else {
           //Not sure how to handle this
           logLine("Twitter Exception: " + te);
-          noLoop();
-          exit();
+          fatalError("Unknown Twitter API error.");
+          return;
         }
       }
 
@@ -158,10 +157,10 @@ class LoginState implements GameState {
               prop.store(os, "twitter4j.properties");
               os.close();
             }
+          println("Successfully stored access token to " + propFilename + ".");
         } catch (IOException ioe) {
             ioe.printStackTrace();
-            noLoop();
-            exit();
+            println("Error saving OAuth token to " + propFilename);
         } finally {
             if (os != null) {
                 try {
@@ -170,7 +169,6 @@ class LoginState implements GameState {
                 }
             }
         }
-        println("Successfully stored access token to " + propFilename + ".");
       }
     } catch (TwitterException te) {
         if (401 == te.getStatusCode()) {

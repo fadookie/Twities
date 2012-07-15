@@ -50,9 +50,7 @@ class CryptoHelper {
         }
       }
     } catch (Exception e) {
-      println("Got exception from crypto library: " + e.getClass().toString());
-      noLoop();
-      exit();
+      fatalError("Got exception from crypto library: " + e.getClass().toString());
     }
 
     return result;

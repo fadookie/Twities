@@ -14,17 +14,15 @@ class LoadingState implements GameState {
     String userFileName = "rootUser.txt";
     String rootUserName[] = loadStrings(userFileName);
     if ((null == rootUserName) || (rootUserName.length < 1)) {
-      logLine("Invalid root user config file at " + userFileName);
-      noLoop();
-      exit();
+      fatalError("Invalid root user config file at " + userFileName);
+      return;
     }
 
     try {
       rootUserId = Long.parseLong(rootUserName[0]);
     } catch (NumberFormatException nfe) {
-      logLine("Invalid user ID number: " + rootUserName[0] + " exception: " + nfe);
-      noLoop();
-      exit();
+      fatalError("Invalid user ID number: " + rootUserName[0] + " exception: " + nfe);
+      return;
     }
 
     logLine("READ USER CONFIG file " + userFileName + ", proceeding with root User ID " + rootUserId + "\n\n");
@@ -49,9 +47,8 @@ class LoadingState implements GameState {
     if (friendIds != null) {
       logLine("Got " + friendIds.getIDs().length + " Friend IDs.");
     } else {
-      logLine("Failed to get Friend IDs. :(");
-      noLoop();
-      exit();
+      fatalError("Failed to get Friend IDs. :(");
+      return;
     }
 
     //Get user info for following
@@ -92,9 +89,8 @@ class LoadingState implements GameState {
       if (usersResponse != null) {
         logLine("Got " + usersResponse.size() + " usersResponse!");
       } else {
-        logLine("No users were found.");
-        noLoop();
-        exit();
+        fatalError("No users were found.");
+        return;
       }
 
       for (User user : usersResponse) {
