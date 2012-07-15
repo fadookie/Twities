@@ -34,8 +34,12 @@
 
     if (responseObject == null) {
       //Cache miss, perform the actual API call
-      println("Executing API call: " + call);
-      responseObject = call.executeCall();
+      try {
+        println("Executing API call: " + call);
+        responseObject = call.executeCall();
+      } catch (IllegalStateException ise) {
+        println("IllegalStateException on twitter API call : " + ise);
+      }
 
       if (responseObject != null) {
         if (call.saveOnCacheMiss()) {

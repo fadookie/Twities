@@ -95,16 +95,13 @@ class LoginState implements GameState {
         link(requestToken.getAuthorizationURL());
 
       } catch (TwitterException te) {
+        //Skip authorization in case we have the data cached already
         if (te.isCausedByNetworkIssue()) {
-          //Skip authorization in case we have the data cached already
           println("Encountered network issue, proceeding anyway.");
-          goToLoadState();
         } else {
-          //Not sure how to handle this
-          logLine("Twitter Exception: " + te);
-          fatalError("Unknown Twitter API error when trying to authenticate." + (DEBUG ? " Please check that your consumer key and secret are valid in " + configFileName : "" ));
-          return;
+          println("Unknown Twitter API error when trying to authenticate" + (DEBUG ? ". Please check that your consumer key and secret are valid in " + configFileName : "" ) + ". Proceeding anyway.");
         }
+        goToLoadState();
       }
 
       //Set up GUI
