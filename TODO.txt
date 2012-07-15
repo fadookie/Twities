@@ -6,6 +6,8 @@
 [x] 3D renderer
     [x] Doesn't have to look like a real city, but maybe have a proportion, the larger the building the taller it gets relative to its width so we don't just have huge cubes
     [x] Camera library? Check processing.org
-[] Distribution requirements
-    [] Store API token in more secure manner
-    [] If an API request needs to be made, present authorization page to user, request OAuth token from twitter
+[x] Distribution requirements
+    [x] Store API token in more secure manner
+    [x] If an API request needs to be made, present authorization page to user, request OAuth token from twitter
+    [] Loading screen when fetching data
+    [] GUI for picking root user
