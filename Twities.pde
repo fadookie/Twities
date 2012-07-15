@@ -41,11 +41,6 @@ static final int TEX_DIRECTION_RIGHT = 2;
 static final int TEX_DIRECTION_FORWARD = 3;
 static final int TEX_DIRECTION_LEFT = 4;
 
-static final String SALT0 = ">3>4lObbD16#WCK28MT5OjWD2bfmsS8GCKO9iGf@zS>),F|{+A";
-static final String SALT1 = "]ND6E94n&6sZlmS^60-wA$oPknALm5+VQ,7w6%!EEOlvr!U0as";
-static final String SALT2 = "@Dqiu!u9}[+wMV[o1nH4u95wqgatr:4O6Xb[.e5<hgofv7zi2p";
-static final String SALT3 = "V2Uo;`qM5.U9N|QS7NgPBoT1yeECA7%`I(6`djU]O5g.Zp54EB";
-
 int maxFollowers; //How many followers the most popular user has
 String messageString = null;
 boolean searchMode = true;
@@ -98,51 +93,31 @@ void setup() {
   ConfigurationBuilder cb = new ConfigurationBuilder();
   
   //We expect a config file containing newline-delimited consumer key, consumer secret, OAuth access token, and OAuth access token secret.
-  String configFileName = "credentials.txt";
+  String configFileName = "credentials-prod.txt";
   String credentials[] = loadStrings(configFileName);
-  if ((null == credentials) || (credentials.length < 4)) {
-    logLine("Invalid config at " + configFileName);
-    noLoop();
-    exit();
+  String credentialsDecrypted[] = null;
+
+  if ((null == credentials) || (credentials.length < 4) || DEBUG) {
+    println("No production config found at " + configFileName + " or DEBUG mode set, checking for dev config.");
+    configFileName = "credentials-dev.txt";
+    //Dev config is not encrypted
+    credentialsDecrypted = loadStrings(configFileName);
+    CryptoHelper cryptoHelper = new CryptoHelper();
+    String[] credentialsEncrypted = cryptoHelper.encryptCredentials(credentialsDecrypted);
+    printDelimiter(1);
+    println("Here are your encrypted credentials for " + configFileName + " : \n");
+    for (String credential : credentialsEncrypted) {
+      println(credential);
+    }
+    printDelimiter(1);
+  } else {
+    //Decrypt credentials-prod.txt
+    CryptoHelper cryptoHelper = new CryptoHelper();
+    credentialsDecrypted = cryptoHelper.decryptCredentials(credentials);
   }
 
-  /**
-   * Here mainly for obfuscation of my API credentials in production builds,
-   * this of course won't stop a smart person like you who is reading my code :)
-   * Please don't hijack my Twitter API credentials! Thanks. -Eliot
-   */
-  String credentialsDecrypted[] = new String[4];
-
-  try {
-    for (int i = 0; i < credentials.length; i++) {
-      String salt;
-      switch(i) {
-        case 0:
-          salt = SALT0;
-          break;
-        case 1:
-          salt = SALT1;
-          break;
-        case 2:
-          salt = SALT2;
-          break;
-        case 3:
-          salt = SALT3;
-          break;
-        default:
-          //This shouldn't happen unless there is whitespace at the end of the file...
-          continue;
-      }
-      //String encryptedData = crypto.encrypt(credentials[i], salt);
-      Crypto crypto = new Crypto("?u:9)254]I{_6bWR");
-      String decryptedData = crypto.decrypt(credentials[i], salt);
-      credentialsDecrypted[i] = decryptedData;
-      //println("Plain Text : " + credentials[i]);
-      //println("Encrypted : " + encryptedData);
-      //println("Decrypted : " + decryptedData);
-    }
-  } catch (Exception e) {
-    println("Got exception from crypto library: " + e.getClass().toString());
+  if ((null == credentialsDecrypted) || (credentialsDecrypted.length < 4)) {
+    logLine("Invalid config at " + configFileName);
     noLoop();
     exit();
   }
