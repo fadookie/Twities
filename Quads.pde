@@ -1,14 +1,26 @@
 class Quads implements Polygons {
   ArrayList<Coordinate> coords = new ArrayList();
   PImage texture;
+  int textureMode;
 
   Quads(PImage texture) {
-    this.texture = texture;
+    construct(texture, NORMAL);
   }
+
+  Quads(PImage texture, int textureMode) {
+    construct(texture, textureMode);
+  }
+
+  void construct(PImage texture, int textureMode) {
+    this.texture = texture;
+    this.textureMode = textureMode;
+  }
+
   /**
    * Helper for building flat quads
    */
   void addQuad(int texDirection, float uMin, float vMin, float uMax, float vMax, PVector pos, PVector size) {
+    //println("min("+uMin+", "+vMin+") max("+uMax+", "+vMax+")");
     UVCoord t1 = null, t2 = null, t3 = null, t4 = null,
             t1tmp = new UVCoord(),
             t2tmp = new UVCoord(),
@@ -65,7 +77,7 @@ class Quads implements Polygons {
 
       pgl.textureSampling(Texture.LINEAR);
       pgl.textureWrap(Texture.REPEAT); //Set texture wrap mode to GL_REPEAT. See http://code.google.com/p/processing/issues/detail?id=94
-      textureMode(NORMAL);
+      textureMode(textureMode);
 
       if (texture != null) {
         texture(texture);

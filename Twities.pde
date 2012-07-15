@@ -29,8 +29,10 @@ PVector citySize;
 PVector maxCityBounds = new PVector();
 PVector minCityBounds = new PVector();
 
-ArrayList<Polygons> levelGeometry = new ArrayList();
+Quads roads;
 PImage roadImage;
+float roadVerticalTextureTileSize = 10;
+//PImage testImage;
 PImage[] grassImages;
 int currentGrassImage = 0;
 
@@ -232,6 +234,17 @@ void setup() {
 
   println("Loaded " + avatars.size() + " avatars.");
 
+  
+  //Load additional assets
+
+  //grassImage = loadImage("grass"+round(random(1, 4))+".png");
+  grassImages = new PImage[4];
+  for (int i = 0; i < grassImages.length; i++) {
+    grassImages[i] = loadImage("grass"+(i+1)+".png");
+  }
+  roadImage  = loadImage("road.png");
+  //testImage = loadImage("number.png");
+
   //Create buildings
   {
     //Create them
@@ -251,6 +264,8 @@ void setup() {
 
     PVector spiralDirection = new PVector(1, 0, 0);
     PVector margin = new PVector(5, 0, 5);
+
+    roads = new Quads(roadImage);
 
     for (Building building : buildings) {
       if (legHeadBuilding == null) {
@@ -287,6 +302,52 @@ void setup() {
 //        println("offset(" + offset + ") * spiralDirection(" + spiralDirection + ") = position("+building.position+")");
       }
 
+      {
+        //Add upper horizontal road segment
+        PVector roadPos = building.position.get();
+        roadPos.z -= margin.z;
+
+        PVector roadSize = new PVector();
+        roadSize.x = margin.x + building.getXScale() + 0.15 /*add a bit on the end to hopefully close up any seams*/;
+        roadSize.z = margin.z;
+
+        roads.addQuad(TEX_DIRECTION_LEFT, 0, 0, 1, roadSize.x / roadVerticalTextureTileSize, roadPos, roadSize);
+      }
+      {
+        //Add lower horizontal road segment
+        PVector roadPos = building.position.get();
+        roadPos.z += building.getZScale();
+
+        PVector roadSize = new PVector();
+        roadSize.x = margin.x + building.getXScale() + 0.15 /*add a bit on the end to hopefully close up any seams*/;
+        roadSize.z = margin.z;
+
+        roads.addQuad(TEX_DIRECTION_LEFT, 0, 0, 1, roadSize.x / roadVerticalTextureTileSize, roadPos, roadSize);
+      }
+      {
+        //Add right vertical road segment
+        PVector roadPos = building.position.get();
+        roadPos.x += building.getXScale();
+
+        PVector roadSize = new PVector();
+        roadSize.x = margin.x;
+        roadSize.z = margin.z + building.getZScale();
+
+        roads.addQuad(TEX_DIRECTION_FORWARD, 0, 0, 1, roadSize.z / roadVerticalTextureTileSize, roadPos, roadSize);
+      }
+      {
+        //Add left vertical road segment
+        PVector roadPos = building.position.get();
+        roadPos.x -= margin.x;
+        roadPos.z -= margin.z;
+
+        PVector roadSize = new PVector();
+        roadSize.x = margin.x;
+        roadSize.z = (margin.z * 2) + building.getZScale() + 0.15;
+
+        roads.addQuad(TEX_DIRECTION_FORWARD, 0, 0, 1, roadSize.z / roadVerticalTextureTileSize, roadPos, roadSize);
+      }
+
       //println(building +" margin="+margin);
 
       previousBuilding = building;
@@ -319,24 +380,6 @@ void setup() {
   camera.setMaximumDistance(6500);
 
   messageString = null;
-  
-  //Load additional assets
-
-  //grassImage = loadImage("grass"+round(random(1, 4))+".png");
-  grassImages = new PImage[4];
-  for (int i = 0; i < grassImages.length; i++) {
-    grassImages[i] = loadImage("grass"+(i+1)+".png");
-  }
-  roadImage  = loadImage("road.png");
-
-  {
-    Quads roadTest = new Quads(grassImages[3]);
-    roadTest.addQuad(TEX_DIRECTION_BACK, 0, 0, 1, 10, minCityBounds, new PVector(100, 0, 2000));
-    roadTest.addQuad(TEX_DIRECTION_FORWARD, 0, 0, 1, 10, maxCityBounds, new PVector(100, 0, 2000));
-    roadTest.addQuad(TEX_DIRECTION_LEFT, 0, 0, 1, 10, maxCityBounds, new PVector(2000, 0, 100));
-    roadTest.addQuad(TEX_DIRECTION_RIGHT, 0, 0, 1, 10, new PVector(1500, 0, 1500), new PVector(2000, 0, 100));
-    levelGeometry.add(roadTest);
-  }
 }
 
 
@@ -347,12 +390,13 @@ void draw() {
 
   background(color(112, 252, 255));
 
-  //Draw ground
+  //Draw ground detail stuff
   hint(DISABLE_DEPTH_TEST); //Was getting some weird interlacing stuff, so i'm now drawing the ground in it's own depth buffer underneath the buildings at all times
   pushStyle();
   noStroke();
   fill(0);
 
+  //Draw ground
   pushMatrix();
 
   //Just make the ground plane really large
@@ -373,20 +417,7 @@ void draw() {
   popMatrix();
 
   //Draw roads
-  /*
-  beginShape(QUADS);
-  texture(roadImage);
-  vertex(minCityBounds.x, 0, minCityBounds.z, 0, 0);
-  vertex(1, 0, minCityBounds.z, 1, 0);
-  vertex(1, 0, maxCityBounds.z, 1, 1);
-  vertex(minCityBounds.x, 0, maxCityBounds.z, 0, 1);
-  endShape();
-  */
-
-  //Draw "level geometry"
-  for (Polygons p : levelGeometry) {
-    p.draw();
-  }
+  roads.draw();
 
   popStyle();
   hint(ENABLE_DEPTH_TEST);
