@@ -2,6 +2,7 @@ import processing.opengl.*;
 import javax.media.opengl.*;
 import peasy.*;
 import controlP5.*;
+import java.awt.datatransfer.*;
 
 boolean DEBUG = false;
 boolean saveNextFrame = false;
@@ -47,6 +48,8 @@ static final int TEX_DIRECTION_LEFT = 4;
 
 int maxFollowers; //How many followers the most popular user has
 String messageString = null;
+
+boolean commandKeyDown = false;
 
 //---------- Loading Functions ---------------//
 
@@ -105,10 +108,18 @@ void mouseReleased() {
 }
 
 void keyPressed() {
+  if (KeyEvent.VK_META == keyCode
+      || CONTROL == keyCode) {
+    commandKeyDown = true;
+  }
   engineGetState().keyPressed();
 }
 
 void keyReleased() {
+  if (KeyEvent.VK_META == keyCode
+      || CONTROL == keyCode) {
+    commandKeyDown = false;
+  }
   engineGetState().keyReleased();
 }
 
@@ -219,6 +230,22 @@ PApplet getMainInstance() {
 }
 
 //---------- Utility Functions ---------------//
+
+/**
+ * @return String|null String from clipboard or null on failure
+ */
+String getClipboardString() {
+  //Get the clipboard
+  Clipboard clipboard = getToolkit().getSystemClipboard();
+
+  Transferable clipData = clipboard.getContents(this);
+  String paste = null;
+  try {
+    paste = (String)(clipData.getTransferData(DataFlavor.stringFlavor));
+  } catch (Exception e) {
+  }
+  return paste;
+}
 
 long[][] divideArray(long[] source, int chunksize) {
 

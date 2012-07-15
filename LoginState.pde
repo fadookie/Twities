@@ -209,6 +209,18 @@ class LoginState implements GameState {
   }
 
   void keyPressed() {
+    if (CODED == key) {
+    } else {
+      if ('v' == key) {
+        if (commandKeyDown) {
+          String clipboard = getClipboardString();
+          if (null != clipboard) {
+            pinField.setText(clipboard);
+            pinField.setFocus(true);
+          }
+        }
+      }
+    }
   }
 
   void keyReleased() {
