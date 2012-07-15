@@ -1,3 +1,7 @@
+/**
+ * LoadingState fetches data from the cache or the Twitter API.
+ * After it has finished loading, it will switch to VisualizerState.
+ */
 class LoadingState implements GameState {
   Twitter twitter;
 
@@ -293,5 +297,8 @@ class LoadingState implements GameState {
   }
 
   void keyReleased() {
+  }
+
+  void controlEvent(ControlEvent theEvent) {
   }
 }

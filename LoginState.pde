@@ -1,3 +1,7 @@
+/**
+ * LoginState presents the user with a login prompt and obtains their OAuth token.
+ * Once it has this, it switches to the LoadingState which will fetch data from the cache or the Twitter API.
+ */
 class LoginState implements GameState {
   void setup() {
     //Set up Twitter API Credentials
@@ -88,5 +92,8 @@ class LoginState implements GameState {
   }
 
   void keyReleased() {
+  }
+
+  void controlEvent(ControlEvent theEvent) {
   }
 }

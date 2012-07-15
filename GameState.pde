@@ -17,4 +17,5 @@ interface GameState {
   void mouseReleased();
   void keyPressed();
   void keyReleased();
+  void controlEvent(ControlEvent theEvent);
 }

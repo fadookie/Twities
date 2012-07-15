@@ -48,12 +48,6 @@ static final int TEX_DIRECTION_LEFT = 4;
 
 int maxFollowers; //How many followers the most popular user has
 String messageString = null;
-boolean searchMode = true;
-String searchUsername = "";
-Group searchGroup;
-Textfield searchUsernameTextfield;
-Bang searchUsernameButton;
-//Bang searchHideButton;
 
 //---------- Loading Functions ---------------//
 
@@ -122,54 +116,8 @@ void keyReleased() {
   engineGetState().keyReleased();
 }
 
-void toggleSearchMode() {
-  searchMode = !searchMode;
-  if (searchMode) {
-    searchGroup.hide();
-    this.clear();
-  } else {
-    searchGroup.show();
-    searchUsernameTextfield.setFocus(true);
-  }
-}
-
-//---------- ControlP5 GUI Event Handlers ---------------//
-
-public void search() {
-  //Event handler for Search button being pressed
-  searchUsernameTextfield.submit();
-}
-
-/*
-public void x() {
-  toggleSearchMode();
-}
-*/
-
-public void clear() {
-  searchUsernameTextfield.setColor(color(255));
-  searchUsernameTextfield.clear();
-}
-
-public void searchUsername(String screenName) {
-  // event handler for searchUsername being submitted
-  tryHighlightUser(screenName.trim());
-}
-
-void tryHighlightUser(String screenName) {
-  Building resultBuilding = buildingsByName.get(screenName.toLowerCase());
-  if (null != resultBuilding) {
-    PVector center = resultBuilding.getCenterPosition();
-    //The center is the actual center of the building, we want to center our camera on the top of the building so we use the Y scale. Remember to flip the sign since "up" in this city is the -Y axis
-    camera.lookAt(center.x, -resultBuilding.getYScale(), center.z, msCameraTweenTime);
-    camera.setRotations(radians(90), 0, 0);
-    camera.setDistance(170, msCameraTweenTime);
-    searchUsernameTextfield.setColor(color(255));
-    searchUsernameTextfield.clear();
-  } else {
-    searchUsernameTextfield.setText(screenName);
-    searchUsernameTextfield.setColor(color(255, 0, 0));
-  }
+void controlEvent(ControlEvent theEvent) {
+  engineGetState().controlEvent(theEvent);
 }
 
 //---------- Game State Handling Functions ---------------//

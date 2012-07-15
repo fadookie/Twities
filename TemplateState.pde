@@ -31,4 +31,7 @@ class TemplateState implements GameState {
 
   void keyReleased() {
   }
+
+  void controlEvent(ControlEvent theEvent) {
+  }
 }

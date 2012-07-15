@@ -1,4 +1,15 @@
+/**
+ * VisualizerState is the main state of the application.
+ * It renders a 3D representation of the Twitter data that responds to user input.
+ */
 class VisualizerState implements GameState {
+  boolean searchMode = true;
+  String searchUsername = "";
+  Group searchGroup;
+  Textfield searchUsernameTextfield;
+  Bang searchUsernameButton;
+  //Bang searchHideButton;
+
   void setup() {
     //Default processing camera perspective, but move the near clip plane in and far clip plane out
     float cameraZ = ((height/2.0) / tan(PI*60.0/360.0));
@@ -175,4 +186,66 @@ class VisualizerState implements GameState {
 
   void keyReleased() {
   }
+
+  //---------- ControlP5 GUI Event Handlers ---------------//
+
+  void controlEvent(ControlEvent theEvent) {
+    //Manually invoke the appropriate event
+    if (searchUsernameTextfield == theEvent.getController()) {
+      searchUsername(theEvent.getController().getStringValue());
+    } else if (searchUsernameButton == theEvent.getController()) {
+      search();
+    } else {
+      println("unrecognized event: " + theEvent);
+    }
+  }
+
+  void search() {
+    //Event handler for Search button being pressed
+    searchUsernameTextfield.submit();
+  }
+
+  /*
+  public void x() {
+    toggleSearchMode();
+  }
+  */
+
+  void clear() {
+    searchUsernameTextfield.setColor(color(255));
+    searchUsernameTextfield.clear();
+  }
+
+  void searchUsername(String screenName) {
+    // event handler for searchUsername being submitted
+    tryHighlightUser(screenName.trim());
+  }
+
+  void tryHighlightUser(String screenName) {
+    Building resultBuilding = buildingsByName.get(screenName.toLowerCase());
+    if (null != resultBuilding) {
+      PVector center = resultBuilding.getCenterPosition();
+      //The center is the actual center of the building, we want to center our camera on the top of the building so we use the Y scale. Remember to flip the sign since "up" in this city is the -Y axis
+      camera.lookAt(center.x, -resultBuilding.getYScale(), center.z, msCameraTweenTime);
+      camera.setRotations(radians(90), 0, 0);
+      camera.setDistance(170, msCameraTweenTime);
+      searchUsernameTextfield.setColor(color(255));
+      searchUsernameTextfield.clear();
+    } else {
+      searchUsernameTextfield.setText(screenName);
+      searchUsernameTextfield.setColor(color(255, 0, 0));
+    }
+  }
+
+  void toggleSearchMode() {
+    searchMode = !searchMode;
+    if (searchMode) {
+      searchGroup.hide();
+      this.clear();
+    } else {
+      searchGroup.show();
+      searchUsernameTextfield.setFocus(true);
+    }
+  }
+
 }
