@@ -7,6 +7,10 @@ ControlP5 cp5;
 boolean DEBUG = false;
 boolean saveNextFrame = false;
 
+/** Stack to hold the game states in use.
+ * Please don't access this directly, use the engine state functions. */
+Stack<GameState> states = new Stack();
+
 PeasyCam camera;
 long msCameraTweenTime = 1000;
 //Camera debug stuff
@@ -610,7 +614,83 @@ void tryHighlightUser(String screenName) {
   }
 }
 
+//---------- Game State Handling Functions ---------------//
 
+GameState engineGetState() {
+  if (!states.isEmpty()) {
+    return (GameState)states.peek();
+  } 
+  else {
+    return null;
+  }
+}
+
+void engineChangeState(GameState state) {
+  //Cleanup current state
+  if (!states.isEmpty()) {
+    GameState currentState = (GameState)states.peek();
+    currentState.cleanup();
+    states.pop();
+  }
+
+  //Store and setup new state
+  states.push(state);
+  state.setup();
+}
+
+void enginePushState(GameState state) {
+  //Cleanup current state
+  if (!states.isEmpty()) {
+    GameState currentState = (GameState)states.peek();
+    currentState.pause();
+  }
+
+  //Store and setup new state
+  states.push(state);
+  state.setup();
+}
+
+void enginePopState() {
+  GameState previousState = null;
+  //Cleanup current state
+  if (!states.isEmpty()) {
+    GameState currentState = (GameState)states.peek();
+    currentState.cleanup();
+    previousState = currentState;
+    states.pop();
+  }
+
+  //Resume previous state
+  if (!states.isEmpty()) {
+    GameState currentState = (GameState)states.peek();
+    currentState.resume(previousState);
+  }
+}
+
+/**
+ * Clear the state stack in reverse order, 
+ */
+void engineResetToState(GameState state) {
+  //Empty out current state stack, giving each state a chance to run cleanup()
+  if (!states.isEmpty()) {
+    for (int i = states.size(); i > 0;) {
+      GameState currentState = (GameState)states.peek();
+      currentState.cleanup();
+      states.pop();
+      i = states.size();
+    }
+  }
+
+  engineChangeState(state);
+}
+
+void stop() {
+  //Let the states clean up
+  while (engineGetState() != null) {
+    enginePopState();
+  }
+  super.stop();
+}
 
 //---------- Utility Functions ---------------//
 
