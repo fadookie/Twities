@@ -128,6 +128,24 @@ void setup() {
   cb.setOAuthAccessToken(credentialsDecrypted[2]);
   cb.setOAuthAccessTokenSecret(credentialsDecrypted[3]);
 
+  //Make the twitter object
+  Twitter twitter = new TwitterFactory(cb.build()).getInstance();
+
+  //Obtain OAuth access token for user
+  /*
+  try {
+    RequestToken requestToken = twitter.getOAuthRequestToken();
+    println("Got request token.");
+    println("Request token: " + requestToken.getToken());
+    println("Request token secret: " + requestToken.getTokenSecret());
+    AccessToken accessToken = null;
+  } catch (TwitterException te) {
+    logLine("Twitter Exception: " + te);
+    noLoop();
+    exit();
+  }
+  */
+
   //Read in the user name that will be at the center of our graph. TODO: retrieve OAuth token for this user dynamically.
   String userFileName = "rootUser.txt";
   String rootUserName[] = loadStrings(userFileName);
@@ -146,9 +164,6 @@ void setup() {
   }
 
   logLine("READ USER CONFIG file " + userFileName + ", proceeding with root User ID " + rootUserId + "\n\n");
-  
-  //Make the twitter object
-  Twitter twitter = new TwitterFactory(cb.build()).getInstance();
 
   printDelimiter(1);
 
