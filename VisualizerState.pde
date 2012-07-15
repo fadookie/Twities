@@ -3,6 +3,7 @@
  * It renders a 3D representation of the Twitter data that responds to user input.
  */
 class VisualizerState implements GameState {
+  ControlP5 cp5;
   boolean searchMode = true;
   String searchUsername = "";
   Group searchGroup;
@@ -16,6 +17,9 @@ class VisualizerState implements GameState {
     perspective(PI/3.0, width/height, cameraZ/200.0, cameraZ*20.0);
 
     //Set up GUI
+
+    //Set up ControlP5
+    cp5 = new ControlP5(getMainInstance());
     searchGroup = cp5.addGroup("g1");
 
     searchUsernameTextfield = cp5.addTextfield("searchUsername");
@@ -229,8 +233,7 @@ class VisualizerState implements GameState {
       camera.lookAt(center.x, -resultBuilding.getYScale(), center.z, msCameraTweenTime);
       camera.setRotations(radians(90), 0, 0);
       camera.setDistance(170, msCameraTweenTime);
-      searchUsernameTextfield.setColor(color(255));
-      searchUsernameTextfield.clear();
+      this.clear();
     } else {
       searchUsernameTextfield.setText(screenName);
       searchUsernameTextfield.setColor(color(255, 0, 0));

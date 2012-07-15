@@ -2,7 +2,6 @@ import processing.opengl.*;
 import javax.media.opengl.*;
 import peasy.*;
 import controlP5.*;
-ControlP5 cp5;
 
 boolean DEBUG = false;
 boolean saveNextFrame = false;
@@ -53,9 +52,6 @@ String messageString = null;
 
 void setup() {
   size(800,800, OPENGL);
-
-  //Set up ControlP5
-  cp5 = new ControlP5(this);
 
   engineChangeState(new LoginState());
 }
