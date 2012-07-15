@@ -10,6 +10,7 @@ boolean saveNextFrame = false;
 /** Stack to hold the game states in use.
  * Please don't access this directly, use the engine state functions. */
 Stack<GameState> states = new Stack();
+float lastUpdateTimeMs = Float.MIN_VALUE;
 
 PeasyCam camera;
 long msCameraTweenTime = 1000;
@@ -421,11 +422,36 @@ void setup() {
   camera.setMaximumDistance(6500);
 
   messageString = null;
+
+  engineChangeState(new LoginState());
 }
 
+/**
+ * Return a reference to the main PApplet instance for this sketch.
+ * Where in a normal Processing sketch you might initialize a library
+ * from the main class like so:
+ * Fisica.init(this);
+ * When initializing a library from a QGameState, you need to do:
+ * Fisica.init(getMainInstance());
+ * */
+PApplet getMainInstance() {
+  return this;
+}
+
+/**
+ * Update and draw game state
+ */
+void draw() {
+  float deltaTime = millis() - lastUpdateTimeMs;
+  engineGetState().update(deltaTime);
+  lastUpdateTimeMs = millis();
+
+  engineGetState().draw();
+}
 
 //---------- Drawing Functions ---------------//
 
+/*
 void draw() {
   PGraphicsOpenGL pgl = (PGraphicsOpenGL)g;
 
@@ -503,6 +529,7 @@ void draw() {
     saveFrame("screenshot-###.png"); 
   }
 }
+*/
 
 void calculateAxis(float length) {
    // Store the screen positions for the X, Y, Z and origin
@@ -538,6 +565,27 @@ void drawAxis(float weight) {
 
 //---------- Input Handling Functions ---------------//
 
+void mouseDragged() {
+  engineGetState().mouseDragged();
+}
+
+void mousePressed() {
+  engineGetState().mousePressed();
+}
+
+void mouseReleased() {
+  engineGetState().mouseReleased();
+}
+
+void keyPressed() {
+  engineGetState().keyPressed();
+}
+
+void keyReleased() {
+  engineGetState().keyReleased();
+}
+
+/*
 void keyPressed() {
   if (!searchUsernameTextfield.isActive()) {
     if (CODED == key) {
@@ -563,6 +611,7 @@ void keyPressed() {
     }
   }
 }
+*/
 
 void toggleSearchMode() {
   searchMode = !searchMode;

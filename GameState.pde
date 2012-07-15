@@ -10,7 +10,7 @@ interface GameState {
   void cleanup();
   void pause();
   void resume(GameState previousState);
-  void update();
+  void update(float deltaTime);
   void draw();
   void mouseDragged();
   void mousePressed();
