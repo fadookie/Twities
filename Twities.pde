@@ -16,7 +16,6 @@ PVector  axisZHud = new PVector();
 PVector  axisOrgHud = new PVector();
 
 CacheManager cacheManager = new CacheManager();
-Crypto crypto = new Crypto("?u:9)254]I{_6bWR");
 
 long rootUserId = -1;
 IDs friendIds; 
@@ -107,6 +106,11 @@ void setup() {
     exit();
   }
 
+  /**
+   * Here mainly for obfuscation of my API credentials in production builds,
+   * this of course won't stop a smart person like you who is reading my code :)
+   * Please don't hijack my Twitter API credentials! Thanks. -Eliot
+   */
   String credentialsDecrypted[] = new String[4];
 
   try {
@@ -130,6 +134,7 @@ void setup() {
           continue;
       }
       //String encryptedData = crypto.encrypt(credentials[i], salt);
+      Crypto crypto = new Crypto("?u:9)254]I{_6bWR");
       String decryptedData = crypto.decrypt(credentials[i], salt);
       credentialsDecrypted[i] = decryptedData;
       //println("Plain Text : " + credentials[i]);
@@ -137,7 +142,7 @@ void setup() {
       //println("Decrypted : " + decryptedData);
     }
   } catch (Exception e) {
-    println("Got exception from crypto library: " + e);
+    println("Got exception from crypto library: " + e.getClass().toString());
     noLoop();
     exit();
   }
