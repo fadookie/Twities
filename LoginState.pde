@@ -5,6 +5,10 @@
 class LoginState implements GameState {
   Twitter twitter;
   RequestToken requestToken;
+  String propFilename = "twitter4j.properties";
+  String accessTokenPropName = "oauth.accessToken";
+  String accessSecretPropName = "oauth.accessTokenSecret";
+  Properties prop = new Properties();
 
   ControlP5 cp5;
   Group loginGroup;
@@ -47,55 +51,88 @@ class LoginState implements GameState {
     //logLine("READ CREDENTIALS file " + configFileName + ":\n\n" + java.util.Arrays.asList(credentials));
     cb.setOAuthConsumerKey(credentialsDecrypted[0]);
     cb.setOAuthConsumerSecret(credentialsDecrypted[1]);
+
+
+    //First, try to retrieve stored OAuth token
     //cb.setOAuthAccessToken(credentialsDecrypted[2]);
     //cb.setOAuthAccessTokenSecret(credentialsDecrypted[3]);
+    InputStream is = createInput(propFilename);
+    boolean requestNewToken = true;
+    try {
+      prop.load(is);
+      String accessTokenString = prop.getProperty(accessTokenPropName);
+      String accessTokenSecretString = prop.getProperty(accessSecretPropName);
+      if (null != accessTokenString && null != accessTokenSecretString ) {
+        requestNewToken = false;
+        println("found old token");
+        cb.setOAuthAccessToken(accessTokenString);
+        cb.setOAuthAccessTokenSecret(accessTokenSecretString);
+      }
+    } catch (IOException ioe) {
+      println("IOException reading file " + propFilename + " : " + ioe);
+    }
 
     //Make the twitter object
     twitter = new TwitterFactory(cb.build()).getInstance();
 
-    //Obtain OAuth access token for user
+    //Validate stored token
     try {
-      requestToken = twitter.getOAuthRequestToken();
-      println("Got request token.");
-      println("Request token: " + requestToken.getToken());
-      println("Request token secret: " + requestToken.getTokenSecret());
-
-      println("Open the following URL and grant access to your account:");
-      println(requestToken.getAuthorizationURL());
-      link(requestToken.getAuthorizationURL());
-      print("Enter the PIN(if available) and hit enter after you granted access.[PIN]:");
-
-    } catch (TwitterException te) {
-      logLine("Twitter Exception: " + te);
-      noLoop();
-      exit();
+      twitter.verifyCredentials();
+    } catch (Exception e) {
+      println("Verify credentials failed : " +  e);
+      twitter.setOAuthAccessToken(null);
+      requestNewToken = true;
     }
+    println((requestNewToken ? "invalid" : "valid") + " credentials");
 
-    //Set up GUI
+    //Obtain new OAuth access token for user if needed
+    if (requestNewToken) {
+      try {
+        requestToken = twitter.getOAuthRequestToken();
+        println("Got request token.");
+        println("Request token: " + requestToken.getToken());
+        println("Request token secret: " + requestToken.getTokenSecret());
 
-    //Set up ControlP5
-    cp5 = new ControlP5(getMainInstance());
+        println("Open the following URL and grant access to your account:");
+        println(requestToken.getAuthorizationURL());
+        link(requestToken.getAuthorizationURL());
+        print("Enter the PIN(if available) and hit enter after you granted access.[PIN]:");
 
-    loginGroup = cp5.addGroup("g1");
+      } catch (TwitterException te) {
+        logLine("Twitter Exception: " + te);
+        noLoop();
+        exit();
+      }
 
-    pinField = cp5.addTextfield("pin");
-    pinField.setPosition((width/2) - (200/2), (height/2) - (40/2))
-       .setSize(200,40)
-       .setGroup(loginGroup)
-       //.setFont(font)
-       .setCaptionLabel("Login PIN from Twitter (if available)")
-       //.setFocus(true)
-       .setAutoClear(false)
-       ;
+      //Set up GUI
+
+      //Set up ControlP5
+      cp5 = new ControlP5(getMainInstance());
+
+      loginGroup = cp5.addGroup("g1");
+
+      pinField = cp5.addTextfield("pin");
+      pinField.setPosition((width/2) - (200/2), (height/2) - (40/2))
+         .setSize(200,40)
+         .setGroup(loginGroup)
+         //.setFont(font)
+         .setCaptionLabel("Login PIN from Twitter (if available)")
+         //.setFocus(true)
+         .setAutoClear(false)
+         ;
+    } else {
+      goToLoadState();
+    }
+  }
+
+  void goToLoadState() {
+      engineChangeState(new LoadingState(twitter));
   }
 
   void loginWithPin(String pin) {
     AccessToken accessToken = null;
 
     try {
-      String filename = "twitter4j.properties";
-      Properties prop = new Properties();
-
       OutputStream os = null;
       if (pin.length() > 0) {
           accessToken = twitter.getOAuthAccessToken(requestToken, pin);
@@ -108,9 +145,9 @@ class LoginState implements GameState {
         println("Access token secret: " + accessToken.getTokenSecret());
 
         try {
-            prop.setProperty("oauth.accessToken", accessToken.getToken());
-            prop.setProperty("oauth.accessTokenSecret", accessToken.getTokenSecret());
-            os = createOutput(filename);
+            prop.setProperty(accessTokenPropName, accessToken.getToken());
+            prop.setProperty(accessSecretPropName, accessToken.getTokenSecret());
+            os = createOutput(propFilename);
             if (null != os) {
               prop.store(os, "twitter4j.properties");
               os.close();
@@ -127,7 +164,7 @@ class LoginState implements GameState {
                 }
             }
         }
-        println("Successfully stored access token to " + filename + ".");
+        println("Successfully stored access token to " + propFilename + ".");
       }
     } catch (TwitterException te) {
         if (401 == te.getStatusCode()) {
@@ -139,7 +176,7 @@ class LoginState implements GameState {
 
     if (accessToken != null) {
       //Success!
-      engineChangeState(new LoadingState(twitter));
+      goToLoadState();
     }
   }
 
