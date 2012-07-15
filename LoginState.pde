@@ -23,7 +23,7 @@ class LoginState implements GameState {
     String credentials[] = loadStrings(configFileName);
     String credentialsDecrypted[] = null;
 
-    if ((null == credentials) || (credentials.length < 4) || DEBUG) {
+    if ((null == credentials) || (credentials.length < 2) || DEBUG) {
       println("No production config found at " + configFileName + " or DEBUG mode set, checking for dev config.");
       configFileName = "credentials-dev.txt";
       //Dev config is not encrypted
@@ -42,7 +42,7 @@ class LoginState implements GameState {
       credentialsDecrypted = cryptoHelper.decryptCredentials(credentials);
     }
 
-    if ((null == credentialsDecrypted) || (credentialsDecrypted.length < 4)) {
+    if ((null == credentialsDecrypted) || (credentialsDecrypted.length < 2)) {
       fatalError("Invalid config at " + configFileName);
       return;
     }
@@ -53,8 +53,6 @@ class LoginState implements GameState {
 
 
     //First, try to retrieve stored OAuth token
-    //cb.setOAuthAccessToken(credentialsDecrypted[2]);
-    //cb.setOAuthAccessTokenSecret(credentialsDecrypted[3]);
     InputStream is = createInput(propFilename);
     boolean requestNewToken = true;
     try {
@@ -104,7 +102,7 @@ class LoginState implements GameState {
         } else {
           //Not sure how to handle this
           logLine("Twitter Exception: " + te);
-          fatalError("Unknown Twitter API error.");
+          fatalError("Unknown Twitter API error when trying to authenticate." + (DEBUG ? " Please check that your consumer key and secret are valid in " + configFileName : "" ));
           return;
         }
       }

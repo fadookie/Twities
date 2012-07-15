@@ -19,7 +19,7 @@ class CryptoHelper {
   }
 
   String[] cryptCredentials(boolean decrypt, String[] credentials) {
-    String[] result = new String[4];
+    String[] result = new String[credentials.length];
     try {
       Crypto crypto = new Crypto("?u:9)254]I{_6bWR");
 
