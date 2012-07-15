@@ -15,8 +15,9 @@ PVector  axisYHud = new PVector();
 PVector  axisZHud = new PVector();
 PVector  axisOrgHud = new PVector();
 
-//Build an ArrayList to hold all of the words that we get from the imported tweets
 CacheManager cacheManager = new CacheManager();
+Crypto crypto = new Crypto("?u:9)254]I{_6bWR");
+
 long rootUserId = -1;
 IDs friendIds; 
 ArrayList<User> following = new ArrayList();
@@ -40,6 +41,11 @@ static final int TEX_DIRECTION_BACK = 1;
 static final int TEX_DIRECTION_RIGHT = 2;
 static final int TEX_DIRECTION_FORWARD = 3;
 static final int TEX_DIRECTION_LEFT = 4;
+
+static final String SALT0 = ">3>4lObbD16#WCK28MT5OjWD2bfmsS8GCKO9iGf@zS>),F|{+A";
+static final String SALT1 = "]ND6E94n&6sZlmS^60-wA$oPknALm5+VQ,7w6%!EEOlvr!U0as";
+static final String SALT2 = "@Dqiu!u9}[+wMV[o1nH4u95wqgatr:4O6Xb[.e5<hgofv7zi2p";
+static final String SALT3 = "V2Uo;`qM5.U9N|QS7NgPBoT1yeECA7%`I(6`djU]O5g.Zp54EB";
 
 int maxFollowers; //How many followers the most popular user has
 String messageString = null;
@@ -100,11 +106,47 @@ void setup() {
     noLoop();
     exit();
   }
+
+  String credentialsDecrypted[] = new String[4];
+
+  try {
+    for (int i = 0; i < credentials.length; i++) {
+      String salt;
+      switch(i) {
+        case 0:
+          salt = SALT0;
+          break;
+        case 1:
+          salt = SALT1;
+          break;
+        case 2:
+          salt = SALT2;
+          break;
+        case 3:
+          salt = SALT3;
+          break;
+        default:
+          //This shouldn't happen unless there is whitespace at the end of the file...
+          continue;
+      }
+      //String encryptedData = crypto.encrypt(credentials[i], salt);
+      String decryptedData = crypto.decrypt(credentials[i], salt);
+      credentialsDecrypted[i] = decryptedData;
+      //println("Plain Text : " + credentials[i]);
+      //println("Encrypted : " + encryptedData);
+      //println("Decrypted : " + decryptedData);
+    }
+  } catch (Exception e) {
+    println("Got exception from crypto library: " + e);
+    noLoop();
+    exit();
+  }
+
   //logLine("READ CREDENTIALS file " + configFileName + ":\n\n" + java.util.Arrays.asList(credentials));
-  cb.setOAuthConsumerKey(credentials[0]);
-  cb.setOAuthConsumerSecret(credentials[1]);
-  cb.setOAuthAccessToken(credentials[2]);
-  cb.setOAuthAccessTokenSecret(credentials[3]);
+  cb.setOAuthConsumerKey(credentialsDecrypted[0]);
+  cb.setOAuthConsumerSecret(credentialsDecrypted[1]);
+  cb.setOAuthAccessToken(credentialsDecrypted[2]);
+  cb.setOAuthAccessTokenSecret(credentialsDecrypted[3]);
 
   //Read in the user name that will be at the center of our graph. TODO: retrieve OAuth token for this user dynamically.
   String userFileName = "rootUser.txt";
