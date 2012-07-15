@@ -60,476 +60,13 @@ Bang searchUsernameButton;
 void setup() {
   size(800,800, OPENGL);
 
-  //Default processing camera perspective, but move the near clip plane in and far clip plane out
-  float cameraZ = ((height/2.0) / tan(PI*60.0/360.0));
-  perspective(PI/3.0, width/height, cameraZ/200.0, cameraZ*20.0);
-
-  //Set up GUI
+  //Set up ControlP5
   cp5 = new ControlP5(this);
-  searchGroup = cp5.addGroup("g1");
-
-  searchUsernameTextfield = cp5.addTextfield("searchUsername");
-  searchUsernameTextfield.setPosition(20, height - 50)
-     .setSize(200,40)
-     .setGroup(searchGroup)
-     //.setFont(font)
-     .setCaptionLabel("")
-     //.setFocus(true)
-     .setAutoClear(false)
-     ;
-
-  searchUsernameButton = cp5.addBang("search");
-  searchUsernameButton.setPosition(240, height - 50)
-     .setSize(80,40)
-     .setGroup(searchGroup)
-     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
-     ;    
-
-  /*
-  searchHideButton = cp5.addBang("x");
-  searchHideButton.setPosition(340, height - 50)
-     .setSize(40,40)
-     .setGroup(searchGroup)
-     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
-     ;    
- */
- 
-  //Set up Twitter API Credentials
-  ConfigurationBuilder cb = new ConfigurationBuilder();
-  
-  //We expect a config file containing newline-delimited consumer key, consumer secret, OAuth access token, and OAuth access token secret.
-  String configFileName = "credentials-prod.txt";
-  String credentials[] = loadStrings(configFileName);
-  String credentialsDecrypted[] = null;
-
-  if ((null == credentials) || (credentials.length < 4) || DEBUG) {
-    println("No production config found at " + configFileName + " or DEBUG mode set, checking for dev config.");
-    configFileName = "credentials-dev.txt";
-    //Dev config is not encrypted
-    credentialsDecrypted = loadStrings(configFileName);
-    CryptoHelper cryptoHelper = new CryptoHelper();
-    String[] credentialsEncrypted = cryptoHelper.encryptCredentials(credentialsDecrypted);
-    printDelimiter(1);
-    println("Here are your encrypted credentials for " + configFileName + " : \n");
-    for (String credential : credentialsEncrypted) {
-      println(credential);
-    }
-    printDelimiter(1);
-  } else {
-    //Decrypt credentials-prod.txt
-    CryptoHelper cryptoHelper = new CryptoHelper();
-    credentialsDecrypted = cryptoHelper.decryptCredentials(credentials);
-  }
-
-  if ((null == credentialsDecrypted) || (credentialsDecrypted.length < 4)) {
-    logLine("Invalid config at " + configFileName);
-    noLoop();
-    exit();
-  }
-
-  //logLine("READ CREDENTIALS file " + configFileName + ":\n\n" + java.util.Arrays.asList(credentials));
-  cb.setOAuthConsumerKey(credentialsDecrypted[0]);
-  cb.setOAuthConsumerSecret(credentialsDecrypted[1]);
-  cb.setOAuthAccessToken(credentialsDecrypted[2]);
-  cb.setOAuthAccessTokenSecret(credentialsDecrypted[3]);
-
-  //Make the twitter object
-  Twitter twitter = new TwitterFactory(cb.build()).getInstance();
-
-  //Obtain OAuth access token for user
-  /*
-  try {
-    RequestToken requestToken = twitter.getOAuthRequestToken();
-    println("Got request token.");
-    println("Request token: " + requestToken.getToken());
-    println("Request token secret: " + requestToken.getTokenSecret());
-    AccessToken accessToken = null;
-  } catch (TwitterException te) {
-    logLine("Twitter Exception: " + te);
-    noLoop();
-    exit();
-  }
-  */
-
-  //Read in the user name that will be at the center of our graph. TODO: retrieve OAuth token for this user dynamically.
-  String userFileName = "rootUser.txt";
-  String rootUserName[] = loadStrings(userFileName);
-  if ((null == rootUserName) || (rootUserName.length < 1)) {
-    logLine("Invalid root user config file at " + userFileName);
-    noLoop();
-    exit();
-  }
-
-  try {
-    rootUserId = Long.parseLong(rootUserName[0]);
-  } catch (NumberFormatException nfe) {
-    logLine("Invalid user ID number: " + rootUserName[0] + " exception: " + nfe);
-    noLoop();
-    exit();
-  }
-
-  logLine("READ USER CONFIG file " + userFileName + ", proceeding with root User ID " + rootUserId + "\n\n");
-
-  printDelimiter(1);
-
-  //Load users from cache if available
-  users = (HashMap<Long, User>)cacheManager.loadFromCache(cacheManager.cachePrefixForFile("users"));
-  if (users == null) {
-    users = new HashMap<Long, User>();
-  }
-
-  //Get following IDs
-  TwitterCachedFriendsIDCall friendsIdCall = new TwitterCachedFriendsIDCall(
-      twitter,
-      rootUserId,
-      cacheManager.cachePrefixForFile("followingIds", String.valueOf(rootUserId)),
-      true /*save on cache miss*/
-  );
-  friendIds = (IDs)cacheManager.loadFromCacheOrRequest(friendsIdCall);
-
-  if (friendIds != null) {
-    logLine("Got " + friendIds.getIDs().length + " Friend IDs.");
-  } else {
-    logLine("Failed to get Friend IDs. :(");
-    noLoop();
-    exit();
-  }
-
-  //Get user info for following
-  long[] followingMaster = friendIds.getIDs();
-
-  //Use set operations to pare list down to only uncached users
-  //Stupid Java... we have to manually convert long to Long
-  HashSet<Long> followingNotCached = new HashSet<Long>(followingMaster.length);
-  for (long id : followingMaster)
-  {
-    followingNotCached.add(id);
-  }
-
-  //Add root user to so we can make sure we have their user data cached
-  followingNotCached.add(rootUserId);
-
-  followingNotCached.removeAll(users.keySet());
-  
-  if (followingNotCached.size() > 0) {
-    //We need to request the info for some users that aren't in our cache.
-    //First we need to convert the HashSet<Long> back to long[] :(
-    long[] followingNotCachedArray = new long[followingNotCached.size()];
-    {
-      int i = 0;
-      for (Long id : followingNotCached) {
-        followingNotCachedArray[i] = id;
-        i++;
-      }
-    }
-
-    TwitterCachedLookupUsersCall lookupCall = new TwitterCachedLookupUsersCall(
-        twitter,
-        followingNotCachedArray,
-        cacheManager.cachePrefixForFile("lookupUsers"),
-        false /*save on cache miss*/
-    );
-    ResponseList<User> usersResponse = (ResponseList<User>)cacheManager.loadFromCacheOrRequest(lookupCall);
-    if (usersResponse != null) {
-      logLine("Got " + usersResponse.size() + " usersResponse!");
-    } else {
-      logLine("No users were found.");
-      noLoop();
-      exit();
-    }
-
-    for (User user : usersResponse) {
-      users.put(user.getId(), user);
-      println("fetched user " + user.getId());
-    }
-
-    //Write new users map to cache
-    printDelimiter(5);
-    println("Writing updated users map to cache.");
-    cacheManager.saveToCache(cacheManager.cachePrefixForFile("users"), users);
-  }
-
-  //Populate following list
-  for (long id : friendIds.getIDs()) {
-    User user = users.get(id);
-    if (user != null) {
-      following.add(user);
-    } else {
-      println("User " + id + " was null.");
-    }
-  }
-
-  //Add root user so they are on the graph
-  following.add(users.get(rootUserId));
-
-  println("Loaded " + following.size() + " following users.");
-
-  //Load avatars
-  for (User user : following) {
-    try {
-      Avatar userAvatar = new Avatar(user);
-      avatars.put(user, userAvatar);
-    } catch (IOException e) {
-      logLine("IOException when trying to load Avatar at " + user.getProfileImageURL().toString());
-    }
-  }
-
-  println("Loaded " + avatars.size() + " avatars.");
-
-  
-  //Load additional assets
-
-  //grassImage = loadImage("grass"+round(random(1, 4))+".png");
-  grassImages = new PImage[4];
-  for (int i = 0; i < grassImages.length; i++) {
-    grassImages[i] = loadImage("grass"+(i+1)+".png");
-  }
-  roadImage  = loadImage("road.png");
-  //testImage = loadImage("number.png");
-
-  //Create buildings
-  {
-    //Create them
-    for (User user : following) {
-      Building building = new Building(user);
-      building.setAvatar(avatars.get(user)); //This might fail, we will fall back to color rendering
-      buildings.add(building); //Will use natural sort order of Comparable<Building>
-      buildingsByName.put(user.getScreenName().toLowerCase(), building); //Add building to index by screen name
-    }
-
-    //Sort list by follower count, descending
-    Collections.sort(buildings);
-
-    //Position buildings in outward spiral
-    Building previousBuilding = null;
-    Building legHeadBuilding = null;
-
-    PVector spiralDirection = new PVector(1, 0, 0);
-    PVector margin = new PVector(5, 0, 5);
-
-    roads = new Quads(roadImage);
-
-    for (Building building : buildings) {
-      if (legHeadBuilding == null) {
-        //This must be the first building in natural sort order
-        legHeadBuilding = building;
-        maxFollowers = building.user.getFollowersCount(); //Careful, this must be set before calling building.getScale()
-      }
-      if (previousBuilding != null) {
-        building.position = previousBuilding.position.get();
-
-        //Biting my lip and creating a ton of garbage for the sake of clarity
-        PVector offset = new PVector(previousBuilding.getXScale(), 0, previousBuilding.getZScale());
-        offset.add(margin);
-        offset.mult(spiralDirection); //This will cancel movement off the axis of the current spiral leg
-
-        building.position.add(offset);
-
-        //Rotate spiral direction if neccessary
-        PVector buildingBounds = building.getMaxBounds();
-        PVector oldBounds = previousBuilding.getMaxBounds();
-        if (
-               buildingBounds.x     < minCityBounds.x
-            || building.position.x  > maxCityBounds.x
-            || buildingBounds.z     < minCityBounds.z
-            || building.position.z  > maxCityBounds.z
-        ) {
-          legHeadBuilding = building;
-
-          PVector oldDirection = spiralDirection.get();
-          spiralDirection.x = -oldDirection.z;
-          spiralDirection.z = oldDirection.x;
-          //println("rotate to " + spiralDirection);
-        }
-//        println("offset(" + offset + ") * spiralDirection(" + spiralDirection + ") = position("+building.position+")");
-      }
-
-      {
-        //Add upper horizontal road segment
-        PVector roadPos = building.position.get();
-        roadPos.z -= margin.z;
-
-        PVector roadSize = new PVector();
-        roadSize.x = margin.x + building.getXScale() + 0.15 /*add a bit on the end to hopefully close up any seams*/;
-        roadSize.z = margin.z;
-
-        roads.addQuad(TEX_DIRECTION_LEFT, 0, 0, 1, roadSize.x / roadVerticalTextureTileSize, roadPos, roadSize);
-      }
-      {
-        //Add lower horizontal road segment
-        PVector roadPos = building.position.get();
-        roadPos.z += building.getZScale();
-
-        PVector roadSize = new PVector();
-        roadSize.x = margin.x + building.getXScale() + 0.15 /*add a bit on the end to hopefully close up any seams*/;
-        roadSize.z = margin.z;
-
-        roads.addQuad(TEX_DIRECTION_LEFT, 0, 0, 1, roadSize.x / roadVerticalTextureTileSize, roadPos, roadSize);
-      }
-      {
-        //Add right vertical road segment
-        PVector roadPos = building.position.get();
-        roadPos.x += building.getXScale();
-
-        PVector roadSize = new PVector();
-        roadSize.x = margin.x;
-        roadSize.z = margin.z + building.getZScale();
-
-        roads.addQuad(TEX_DIRECTION_FORWARD, 0, 0, 1, roadSize.z / roadVerticalTextureTileSize, roadPos, roadSize);
-      }
-      {
-        //Add left vertical road segment
-        PVector roadPos = building.position.get();
-        roadPos.x -= margin.x;
-        roadPos.z -= margin.z;
-
-        PVector roadSize = new PVector();
-        roadSize.x = margin.x;
-        roadSize.z = (margin.z * 2) + building.getZScale() + 0.15;
-
-        roads.addQuad(TEX_DIRECTION_FORWARD, 0, 0, 1, roadSize.z / roadVerticalTextureTileSize, roadPos, roadSize);
-      }
-
-      //println(building +" margin="+margin);
-
-      previousBuilding = building;
-
-      //Set our max bounds for camera centering later
-      PVector buildingBounds = building.getMaxBounds();
-      if (buildingBounds.x > maxCityBounds.x) maxCityBounds.x = buildingBounds.x;
-      if (buildingBounds.z > maxCityBounds.z) maxCityBounds.z = buildingBounds.z;
-      //Set our min bounds
-      if (building.position.x < minCityBounds.x) minCityBounds.x = building.position.x;
-      if (building.position.z < minCityBounds.z) minCityBounds.z = building.position.z;
-    }
-
-    printDelimiter(1);
-  }
-  println("prepared " + buildings.size() + " buildings.");
-
-  //Set up camera/HUD stuff
-  cityCenter = PVector.add(minCityBounds, maxCityBounds); 
-  cityCenter.div(2);
-
-  citySize = PVector.mult(minCityBounds, -1); //Treat minCityBounds as the origin, not sure if this math here is correct
-  citySize.add(maxCityBounds);
-
-  //println("citySize="+citySize+" cityCenter="+cityCenter);
-
-  //Start looking at the center of the city
-  camera = new PeasyCam(this, cityCenter.x, -40, cityCenter.z, 500/*distance*/);
-  //camera.setMinimumDistance(-10);
-  camera.setMaximumDistance(6500);
-
-  messageString = null;
 
   engineChangeState(new LoginState());
 }
 
-/**
- * Return a reference to the main PApplet instance for this sketch.
- * Where in a normal Processing sketch you might initialize a library
- * from the main class like so:
- * Fisica.init(this);
- * When initializing a library from a QGameState, you need to do:
- * Fisica.init(getMainInstance());
- * */
-PApplet getMainInstance() {
-  return this;
-}
-
-/**
- * Update and draw game state
- */
-void draw() {
-  float deltaTime = millis() - lastUpdateTimeMs;
-  engineGetState().update(deltaTime);
-  lastUpdateTimeMs = millis();
-
-  engineGetState().draw();
-}
-
 //---------- Drawing Functions ---------------//
-
-/*
-void draw() {
-  PGraphicsOpenGL pgl = (PGraphicsOpenGL)g;
-
-  background(color(112, 252, 255));
-
-  //Draw ground detail stuff
-  hint(DISABLE_DEPTH_TEST); //Was getting some weird interlacing stuff, so i'm now drawing the ground in it's own depth buffer underneath the buildings at all times
-  pushStyle();
-  noStroke();
-  fill(0);
-
-  //Draw ground
-  pushMatrix();
-
-  //Just make the ground plane really large
-  scale(1000, 0, 1000);
-
-  beginShape(QUADS);
-  pgl.textureSampling(Texture.LINEAR);
-  pgl.textureWrap(Texture.REPEAT); //Set texture wrap mode to GL_REPEAT. See http://code.google.com/p/processing/issues/detail?id=94
-  textureMode(NORMAL);
-  texture(grassImages[currentGrassImage]);
-  float textureScale = 90000;
-  vertex(minCityBounds.x, 0, minCityBounds.z, 0, 0);
-  vertex(maxCityBounds.x, 0, minCityBounds.z, textureScale, 0);
-  vertex(maxCityBounds.x, 0, maxCityBounds.z, textureScale, textureScale);
-  vertex(minCityBounds.x, 0, maxCityBounds.z, 0, textureScale);
-  endShape();
-
-  popMatrix();
-
-  //Draw roads
-  roads.draw();
-
-  popStyle();
-  hint(ENABLE_DEPTH_TEST);
-
-  pgl.textureSampling(Texture.BILINEAR);
-
-  //Draw buildings
-  for (Building building : buildings) {
-    building.draw();
-  }
-
-  if (DEBUG) {
-    calculateAxis(50); //For debug drawing
-  }
-
-  //HUD
-  camera.beginHUD();
-  //Clear depth buffer so the HUD is guaranteed to be on top
-  hint(DISABLE_DEPTH_TEST); 
-  if (messageString != null) {
-    text(messageString, 0, height - 50);
-  }
-  if (DEBUG) {
-    drawAxis(2);
-  }
-
-  //ControlP5 GUI
-  cp5.draw();
-
-  hint(ENABLE_DEPTH_TEST);
-  camera.endHUD();
-
-  //float[] position = camera.getPosition();
-  //float[] rotations = camera.getRotations();
-  //println(position);
-  //println("rotX: " + degrees(rotations[0]) + ", rotY: " +degrees(rotations[1])+ ", rotZ: " +degrees(rotations[2]) + ", dist: " + camera.getDistance());
-  //
-
-  if (saveNextFrame) {
-    saveNextFrame = false;
-    //Note, this doesn't seem to work with Processing 0206
-    saveFrame("screenshot-###.png"); 
-  }
-}
-*/
 
 void calculateAxis(float length) {
    // Store the screen positions for the X, Y, Z and origin
@@ -585,34 +122,6 @@ void keyReleased() {
   engineGetState().keyReleased();
 }
 
-/*
-void keyPressed() {
-  if (!searchUsernameTextfield.isActive()) {
-    if (CODED == key) {
-    } else {
-      switch(key) {
-        case '/':
-          toggleSearchMode();
-          break;
-        case 'd':
-          DEBUG = !DEBUG;
-          break;
-        case 's':
-          saveNextFrame = true;
-          break;
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-          //Switch grass texture to texture 1-4 (stored in array items 0-3)
-          currentGrassImage = Integer.parseInt(Character.toString(key)) - 1;
-          break;
-      }
-    }
-  }
-}
-*/
-
 void toggleSearchMode() {
   searchMode = !searchMode;
   if (searchMode) {
@@ -664,6 +173,18 @@ void tryHighlightUser(String screenName) {
 }
 
 //---------- Game State Handling Functions ---------------//
+
+/**
+ * Update and draw game state
+ */
+void draw() {
+  float deltaTime = millis() - lastUpdateTimeMs;
+  engineGetState().update(deltaTime);
+  lastUpdateTimeMs = millis();
+
+  engineGetState().draw();
+}
+
 
 GameState engineGetState() {
   if (!states.isEmpty()) {
@@ -739,6 +260,18 @@ void stop() {
     enginePopState();
   }
   super.stop();
+}
+
+/**
+ * Return a reference to the main PApplet instance for this sketch.
+ * Where in a normal Processing sketch you might initialize a library
+ * from the main class like so:
+ * Fisica.init(this);
+ * When initializing a library from a GameState, you need to do:
+ * Fisica.init(getMainInstance());
+ * */
+PApplet getMainInstance() {
+  return this;
 }
 
 //---------- Utility Functions ---------------//
