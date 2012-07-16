@@ -9,5 +9,6 @@
 [x] Distribution requirements
     [x] Store API token in more secure manner
     [x] If an API request needs to be made, present authorization page to user, request OAuth token from twitter
-    [] Loading screen when fetching data
+    [x] Loading screen when fetching data
     [] GUI for picking root user
+    [] Improve GUI/instructions for logging in
