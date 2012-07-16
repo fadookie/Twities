@@ -135,7 +135,12 @@ class LoginState implements GameState {
   }
 
   void goToLoadState() {
-      engineChangeState(new LoadingState(twitter, authenticatedUser));
+      engineChangeState(
+          new LoadScreenState(
+            "Loading data from Twitter, this might take several minutes...",
+            new LoadingState(twitter, authenticatedUser)
+          )
+      );
   }
 
   void loginWithPin(String pin) {
