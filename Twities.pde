@@ -37,6 +37,7 @@ PVector minCityBounds = new PVector();
 Quads roads;
 PImage roadImage;
 float roadVerticalTextureTileSize = 10;
+float groundTextureScale = 90000;
 //PImage testImage;
 PImage[] grassImages;
 int currentGrassImage = 0;

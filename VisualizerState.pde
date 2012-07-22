@@ -39,6 +39,14 @@ class VisualizerState implements GameState {
        .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
        ;    
 
+    //slider for ground texture scale
+    cp5.addSlider("groundTextureScale")
+       .setSize(width, 10)
+       .setPosition(0,50)
+       .setRange(1,90000)
+       .setValue(90000)
+       ;
+
     /*
     searchHideButton = cp5.addBang("x");
     searchHideButton.setPosition(340, height - 50)
@@ -97,11 +105,10 @@ class VisualizerState implements GameState {
     pgl.textureWrap(Texture.REPEAT); //Set texture wrap mode to GL_REPEAT. See http://code.google.com/p/processing/issues/detail?id=94
     textureMode(NORMAL);
     texture(grassImages[currentGrassImage]);
-    float textureScale = 90000;
     vertex(minCityBounds.x, 0, minCityBounds.z, 0, 0);
-    vertex(maxCityBounds.x, 0, minCityBounds.z, textureScale, 0);
-    vertex(maxCityBounds.x, 0, maxCityBounds.z, textureScale, textureScale);
-    vertex(minCityBounds.x, 0, maxCityBounds.z, 0, textureScale);
+    vertex(maxCityBounds.x, 0, minCityBounds.z, groundTextureScale, 0);
+    vertex(maxCityBounds.x, 0, maxCityBounds.z, groundTextureScale, groundTextureScale);
+    vertex(minCityBounds.x, 0, maxCityBounds.z, 0, groundTextureScale);
     endShape();
 
     popMatrix();
