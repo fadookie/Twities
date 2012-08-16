@@ -108,7 +108,7 @@ class VisualizerState implements GameState {
     scale(40, 0, 40);
 
     beginShape(QUADS);
-    pgl.textureSampling(Texture.LINEAR);
+    pgl.textureSampling(Texture.POINT);
     pgl.textureWrap(Texture.REPEAT); //Set texture wrap mode to GL_REPEAT. See http://code.google.com/p/processing/issues/detail?id=94
     textureMode(NORMAL);
     texture(grassImages[currentGrassImage]);
@@ -140,7 +140,7 @@ class VisualizerState implements GameState {
     scale(40, 0, 40);
     noStroke();
     beginShape(QUADS);
-    pgl.textureSampling(Texture.LINEAR);
+    pgl.textureSampling(Texture.POINT);
     pgl.textureWrap(Texture.REPEAT); //Set texture wrap mode to GL_REPEAT. See http://code.google.com/p/processing/issues/detail?id=94
     textureMode(NORMAL);
     texture(cloudTexture);
