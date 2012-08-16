@@ -10,6 +10,7 @@ class VisualizerState implements GameState {
   Textfield searchUsernameTextfield;
   Bang searchUsernameButton;
   //Bang searchHideButton;
+  PImage cloudTexture;
 
   void setup() {
     //Default processing camera perspective, but move the near clip plane in and far clip plane out
@@ -63,6 +64,9 @@ class VisualizerState implements GameState {
     citySize = PVector.mult(minCityBounds, -1); //Treat minCityBounds as the origin, not sure if this math here is correct
     citySize.add(maxCityBounds);
 
+    //Generate cloud texture
+    cloudTexture = randomCloudTexture();
+
     //println("citySize="+citySize+" cityCenter="+cityCenter);
 
     //Start looking at the center of the city
@@ -98,7 +102,7 @@ class VisualizerState implements GameState {
     pushMatrix();
 
     //Just make the ground plane really large
-    scale(1000, 0, 1000);
+    scale(40, 0, 40);
 
     beginShape(QUADS);
     pgl.textureSampling(Texture.LINEAR);
@@ -125,6 +129,24 @@ class VisualizerState implements GameState {
     for (Building building : buildings) {
       building.draw();
     }
+
+
+    //Draw clouds
+    pushMatrix();
+    translate(0, -1100, 0);
+    scale(40, 0, 40);
+    beginShape(QUADS);
+    pgl.textureSampling(Texture.LINEAR);
+    pgl.textureWrap(Texture.REPEAT); //Set texture wrap mode to GL_REPEAT. See http://code.google.com/p/processing/issues/detail?id=94
+    textureMode(NORMAL);
+    texture(cloudTexture);
+    //texture(grassImages[currentGrassImage]);
+    vertex(minCityBounds.x, 0, minCityBounds.z, 0, 0);
+    vertex(maxCityBounds.x, 0, minCityBounds.z, groundTextureScale, 0);
+    vertex(maxCityBounds.x, 0, maxCityBounds.z, groundTextureScale, groundTextureScale);
+    vertex(minCityBounds.x, 0, maxCityBounds.z, 0, groundTextureScale);
+    endShape();
+    popMatrix();
 
     if (DEBUG) {
       calculateAxis(50); //For debug drawing
@@ -158,6 +180,30 @@ class VisualizerState implements GameState {
       //Note, this doesn't seem to work with Processing 0206
       saveFrame("screenshot-###.png"); 
     }
+  }
+
+  PImage randomCloudTexture() {
+    float noiseScale=0.02;
+    PImage tex = createImage(512, 512, ARGB);
+
+    tex.loadPixels();
+    {
+
+      int x = 0, y = 0;
+      while (y < tex.height) {
+        while (x < tex.width) {
+          int i = x + (y * tex.width);
+          float pixelColor = noise(x * noiseScale, y * noiseScale) * 255;
+          tex.pixels[i] = color(pixelColor, pixelColor, pixelColor, pixelColor);
+          x++;
+        }
+        x = 0;
+        y++;
+      }
+    }
+    tex.updatePixels();
+
+    return tex;
   }
 
   void mouseDragged() {
