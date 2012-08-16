@@ -11,6 +11,7 @@ class VisualizerState implements GameState {
   Bang searchUsernameButton;
   //Bang searchHideButton;
   PImage cloudTexture;
+  int cloudResolution = 512;
 
   void setup() {
     //Default processing camera perspective, but move the near clip plane in and far clip plane out
@@ -41,11 +42,13 @@ class VisualizerState implements GameState {
        ;    
 
     //slider for ground texture scale
+    //Dafuq... why was it messing with my value? Oh well, here's a weird workaround...
+    float groundTexScale = groundTextureScale;
     cp5.addSlider("groundTextureScale")
        .setSize(width, 10)
        .setPosition(0,50)
        .setRange(1,90000)
-       .setValue(90000)
+       .setValue(groundTexScale)
        ;
 
     /*
@@ -135,18 +138,21 @@ class VisualizerState implements GameState {
     pushMatrix();
     translate(0, -1100, 0);
     scale(40, 0, 40);
+    noStroke();
     beginShape(QUADS);
     pgl.textureSampling(Texture.LINEAR);
     pgl.textureWrap(Texture.REPEAT); //Set texture wrap mode to GL_REPEAT. See http://code.google.com/p/processing/issues/detail?id=94
     textureMode(NORMAL);
     texture(cloudTexture);
-    //texture(grassImages[currentGrassImage]);
+
     vertex(minCityBounds.x, 0, minCityBounds.z, 0, 0);
-    vertex(maxCityBounds.x, 0, minCityBounds.z, groundTextureScale, 0);
-    vertex(maxCityBounds.x, 0, maxCityBounds.z, groundTextureScale, groundTextureScale);
-    vertex(minCityBounds.x, 0, maxCityBounds.z, 0, groundTextureScale);
+    vertex(maxCityBounds.x, 0, minCityBounds.z, 1, 0);
+    vertex(maxCityBounds.x, 0, maxCityBounds.z, 1, 1);
+    vertex(minCityBounds.x, 0, maxCityBounds.z, 0, 1);
     endShape();
     popMatrix();
+    
+    pgl.textureSampling(Texture.BILINEAR);
 
     if (DEBUG) {
       calculateAxis(50); //For debug drawing
@@ -184,7 +190,7 @@ class VisualizerState implements GameState {
 
   PImage randomCloudTexture() {
     float noiseScale=0.02;
-    PImage tex = createImage(512, 512, ARGB);
+    PImage tex = createImage(cloudResolution, cloudResolution, ARGB);
 
     tex.loadPixels();
     {
@@ -194,7 +200,7 @@ class VisualizerState implements GameState {
         while (x < tex.width) {
           int i = x + (y * tex.width);
           float pixelColor = noise(x * noiseScale, y * noiseScale) * 255;
-          tex.pixels[i] = color(pixelColor, pixelColor, pixelColor, pixelColor);
+          tex.pixels[i] = color(255, 255, 255, pixelColor);
           x++;
         }
         x = 0;
